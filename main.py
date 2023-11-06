@@ -15,7 +15,10 @@ class App:
         #self.processor.get_all_files_batch_optimized()
 
         logging.info("Starting process find and mark duplicates...")
-        self.processor.process_duplicates()
+        #self.processor.process_duplicates_memory()
+        
+        logging.info("Starting process duplicate summary...")
+        self.processor.show_duplicates_summary()
         
         #logging.info("Fetching duplicates summary...")
         # Accessing db_operations via duplicate_processor

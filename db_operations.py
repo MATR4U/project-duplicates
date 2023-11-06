@@ -67,6 +67,39 @@ class DatabaseOperations:
 
         logging.info("Database connection closed successfully.")
 
+    def fetchall(self):
+        """fetch all files"""
+        if self.conn:
+            cur = self.conn.cursor()
+            cur.execute("SELECT id, hash, creation_time FROM files")
+            all_files = cur.fetchall()
+            return all_files
+        
+    def processDuplicates(self, original_id, duplicate_ids):
+        if self.conn:
+            cur = self.conn.cursor()
+            # Check if original_id already has an entry in the duplicates table
+            cur.execute("SELECT duplicate_ids FROM duplicates WHERE original_id = ?", (original_id,))
+            existing_entry = cur.fetchone()
+
+            if existing_entry:
+                # Load the existing duplicate IDs and convert them to a set for uniqueness
+                existing_duplicate_ids_set = set(json.loads(existing_entry[0]))
+                
+                # Convert the new duplicate IDs list to a set and combine it with the existing set
+                new_duplicate_ids_set = existing_duplicate_ids_set.union(set(duplicate_ids))
+                
+                # Convert the combined set back to a list and JSON encode it for database update
+                new_duplicate_ids_json = json.dumps(list(new_duplicate_ids_set))
+                
+                # Update the existing entry with new unique duplicate_ids
+                cur.execute("UPDATE duplicates SET duplicate_ids = ? WHERE original_id = ?", (new_duplicate_ids_json, original_id))
+            else:
+                # Insert new entry into duplicates table with the unique list of duplicate IDs
+                cur.execute("INSERT INTO duplicates (original_id, duplicate_ids) VALUES (?, ?)", (original_id, json.dumps(duplicate_ids)))
+
+            self.conn.commit()
+
     def process_all_files_for_duplicates(self):
         """
         Goes through all files in the database, identifies duplicates, inserts them into
@@ -254,6 +287,20 @@ class DatabaseOperations:
         except Exception as e:
             logging.error(f"Error cleaning up database: {str(e)}")
 
+    def fetch_originals(self):
+        try:
+            cur = self.conn.cursor()
+            cur.execute("""
+                SELECT f.id, f.path as original_path, d.duplicate_ids
+                FROM files f
+                INNER JOIN duplicates d ON f.id = d.original_id
+                WHERE f.marked = 0
+            """)
+            return cur.fetchall()
+        except sqlite3.Error as e:
+            print(f"An error occurred: {e}")
+            return []
+    
     def fetch_duplicates(self):
         # Assuming that self.conn is a persistent connection managed outside this method.
         try:
@@ -281,3 +328,38 @@ class DatabaseOperations:
             logging.error(f"Error fetching duplicates from database: {str(e)}")
             return {}
 
+    def get_duplicates(self):
+        """
+        Fetches and prints a summary of the original files and their duplicates.
+        
+        :param cursor: A sqlite3 cursor object.
+        """
+        try:
+            originals = self.fetch_originals()
+            originals_and_duplicates = {}
+
+            for original_id, original_path, duplicate_ids_json in originals:
+                # Decode the JSON list of duplicate IDs
+                duplicate_ids = json.loads(duplicate_ids_json)
+
+                # Fetch the paths for each duplicate ID
+                cursor = self.conn.cursor()
+                cursor.execute("""
+                    SELECT id, path
+                    FROM files
+                    WHERE id IN ({0})
+                """.format(",".join("?" for _ in duplicate_ids)), duplicate_ids)
+
+                # Fetch the results
+                duplicates = cursor.fetchall()
+
+                # Build a set of tuples (duplicate_id, duplicate_path) for the duplicates
+                duplicates_set = {(dup_id, dup_path) for dup_id, dup_path in duplicates}
+
+                # Map the original path to its duplicates
+                originals_and_duplicates[original_path] = duplicates_set
+
+            return originals_and_duplicates
+
+        except Exception as e:
+            print(f"An error occurred while fetching duplicates summary: {e}")

@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from db_operations import DatabaseOperations
 from file_operations import FileOperations
 from utilities import Utilities
+from pathlib import Path, PureWindowsPath, PurePosixPath
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -30,8 +31,44 @@ class Processor:
         progress_bar.close()
         return filepaths
     
-    def process_duplicates(self):
+    def process_duplicates_db(self):
         self.db_operations.process_all_files_for_duplicates()     
+
+    def process_duplicates_memory(self):
+        """
+        Goes through all files in the database, identifies duplicates, and processes them using in-memory calculations.
+        """
+        # Step 1: Retrieve all file entries and store them in memory.
+        all_files = self.db_operations.fetchall()
+
+        # Step 2: Group entries by their hash.
+        files_by_hash = {}
+        for file_id, file_hash, creation_time in all_files:
+            if file_hash not in files_by_hash:
+                files_by_hash[file_hash] = []
+            files_by_hash[file_hash].append((file_id, creation_time))
+
+        # Initialize the progress bar
+        progress_bar = tqdm(total=len(files_by_hash), desc="Processing duplicates", unit="hash")
+
+        # Step 3: Process each group to determine the original and duplicate files.
+        for file_hash, files in files_by_hash.items():
+            if len(files) > 1:
+                # Sort the files by creation time to find the oldest file.
+                files.sort(key=lambda x: x[1])
+                original_id = files[0][0]
+                duplicate_ids = [file_id for file_id, _ in files[1:]]
+
+                # Step 4: Insert the duplicates into the duplicates table and mark them in the files table.
+                self.db_operations.processDuplicates(original_id, duplicate_ids)
+
+            # Update the progress bar
+            progress_bar.update(1)
+
+        # Finalize the progress bar
+        progress_bar.close()
+
+        print(f"Processed all files for duplicates in memory.")
 
     def _move_confirmed_duplicates(self, confirmed_duplicates, destination_directory):
         return None
@@ -109,3 +146,16 @@ class Processor:
             progress_bar.close()
 
         logging.info(f"Finished storing files into the database. {total_written} new files were added.")
+
+    def show_duplicates_summary(self):
+        duplicates = self.db_operations.get_duplicates()
+        
+        filter = [".DS_Store", "@__thumb"]
+
+        # Print the paths of the duplicates
+        if duplicates:
+            for key, value in duplicates.items():
+                for item in value:
+                    if all(substring not in key for substring in filter):
+                        print(f"{key}: {value}")
+                
