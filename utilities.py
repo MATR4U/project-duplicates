@@ -1,11 +1,22 @@
 import datetime
 import requests
 import logging
+import json
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Utilities:
-
+        
+    @staticmethod
+    def load_config():
+        """Load configuration from config.json."""
+        try:
+            with open('config.json', 'r') as file:
+                return json.load(file)
+        except Exception as e:
+            logging.error(f"Error loading configuration: {str(e)}")
+            return {}
+        
     @staticmethod
     def send_notification(message, api_url="https://api.example.com/notifications", api_token="YOUR_API_TOKEN"):
         headers = {

@@ -13,9 +13,12 @@ import re
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class FileOperations:
+    def __init__(self, dataSourceDirectory, dataDestinationDir):
+        self.dataSourceDirectory = dataSourceDirectory
+        self.dataDestinationDir = dataDestinationDir
 
     @staticmethod
-    def hash_file(filepath):
+    def _get_file_content_hash_full(filepath):
         hasher = hashlib.sha1()
         with open(filepath, 'rb') as f:
             buf = f.read(65536)
@@ -25,17 +28,60 @@ class FileOperations:
         return hasher.hexdigest()
 
     @staticmethod
-    def combined_hash(filepath):
-        content_hash = FileOperations.hash_file(filepath)
-        metadata = os.stat(filepath)
-        combined_data = content_hash + str(metadata.st_size) + str(metadata.st_mtime) + str(metadata.st_atime)
-        return hashlib.sha1(combined_data.encode()).hexdigest()
+    def _get_file_content_hash_sample(filepath):
+        """
+        Generates a hash for a file by sampling parts of the file.
+        sample_size specifies the block size to read.
+        """
+        file_size = os.path.getsize(filepath)
+        hash_obj = hashlib.sha256()
+        sample_size = 256
+        
+        with open(filepath, 'rb') as f:
+            # Include file size in the hash
+            hash_obj.update(str(file_size).encode())
 
+            # If the file is smaller than twice the sample_size, just read it once
+            if file_size <= 2 * sample_size:
+                hash_obj.update(f.read())
+            else:
+                # Read the start, middle, and end of the file
+                f.seek(0)
+                hash_obj.update(f.read(sample_size))
+                f.seek(file_size // 2)
+                hash_obj.update(f.read(sample_size))
+                f.seek(-sample_size, os.SEEK_END)
+                hash_obj.update(f.read(sample_size))
+
+        return hash_obj.hexdigest()
+    
     @staticmethod
-    def extract_date_from_filename(filename):
-        date_pattern = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}\.\d{2}\.\d{2})')
-        match = date_pattern.search(filename)
-        return match.group(1) if match else None
+    def get_file_metadata_hash(filepath):
+        metadata = FileOperations.get_file_metadata(filepath)  # Assuming get_file_metadata is also a static method
+        combined_hash = str(str(metadata['hash']) + str(metadata['size']) + metadata['creation_time'])
+        return hashlib.sha1(combined_hash.encode()).hexdigest()
+    
+    @staticmethod
+    def get_file_metadata(filepath):
+        """Prepare file data for further processing or storage."""
+        # Get file size, modification time, and other relevant metadata
+        metadata = os.stat(filepath)
+        hash = FileOperations._get_file_content_hash_sample(filepath)
+        mtime = datetime.datetime.fromtimestamp(metadata.st_mtime).isoformat()
+        atime = datetime.datetime.fromtimestamp(metadata.st_atime).isoformat()
+        ctime = datetime.datetime.fromtimestamp(metadata.st_ctime).isoformat()
+
+        # Return a dictionary or tuple with all the prepared data
+        file_data = {
+            'path': filepath,
+            'hash': hash,
+            'size': metadata.st_size,
+            'modification_time': mtime,
+            'access_time': atime,
+            'creation_time': ctime
+        }
+
+        return file_data
 
     @staticmethod
     def get_file_date(filepath):
@@ -46,7 +92,13 @@ class FileOperations:
         else:
             timestamp = os.path.getmtime(filepath)
             return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H.%M.%S')
-
+        
+    @staticmethod
+    def extract_date_from_filename(filename):
+        date_pattern = re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}\.\d{2}\.\d{2})')
+        match = date_pattern.search(filename)
+        return match.group(1) if match else None
+    
     @staticmethod
     def audio_duration(filepath):
         y, sr = librosa.load(filepath, sr=None)
@@ -74,22 +126,12 @@ class FileOperations:
         with ProcessPoolExecutor() as executor:
             for dirpath, _, filenames in os.walk(directory):
                 filepaths = [os.path.join(dirpath, filename) for filename in filenames]
-                for filepath, file_hash in zip(filepaths, executor.map(FileOperations.hash_file, filepaths)):
+                for filepath, file_hash in zip(filepaths, executor.map(FileOperations.get_hash_filecontent, filepaths)):
                     if file_hash in hashes:
                         duplicates.setdefault(file_hash, []).append(filepath)
                     else:
                         hashes[file_hash] = filepath
         return {k: v for k, v in duplicates.items() if len(v) > 1}
-
-    @staticmethod
-    def get_file_metadata(filepath):
-        metadata = os.stat(filepath)
-        return (
-            metadata.st_size,
-            metadata.st_mtime,
-            metadata.st_atime,
-            metadata.st_ctime
-        )
 
     @staticmethod
     def file_exists_and_same(source, destination):

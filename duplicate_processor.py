@@ -9,7 +9,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class DuplicateProcessor:
     def __init__(self, directory, db_name="duplicates.db"):
-        self.config = self.load_config()
+        with open('config.json', 'r') as file:
+            self.config = json.load(file)
         self.directory = directory
         self.db_operations = DatabaseOperations(db_name)
         self.file_operations = FileOperations()
@@ -78,3 +79,42 @@ class DuplicateProcessor:
 
         except Exception as e:
             logging.error(f"Error processing duplicates: {str(e)}")
+
+    def process_duplicates(self):
+        logging.info("Processing duplicates...")
+        try:
+            duplicates = self.find_duplicates()
+            data_to_insert = [(file_hash, filepath) + self.file_operations.get_file_metadata(filepath) 
+                              for file_hash, filepaths in duplicates.items() 
+                              for filepath in filepaths]
+            batch_size = self.config.get("batch_size", 100)
+            for i in range(0, len(data_to_insert), batch_size):
+                self.db_operations.write_to_db(data_to_insert[i:i+batch_size])
+            logging.info(f"Processed {len(data_to_insert)} duplicate entries.")
+        except Exception as e:
+            logging.error(f"Error processing duplicates: {str(e)}")
+
+    def get_duplicates_summary(self):
+        duplicates = self.db_operations.fetch_duplicates()
+
+        # Grouping by hash
+        grouped_duplicates = {}
+        for entry in duplicates:
+            hash_value = entry[0]
+            path = entry[1]
+            if hash_value not in grouped_duplicates:
+                grouped_duplicates[hash_value] = []
+            grouped_duplicates[hash_value].append(path)
+
+        # Creating the summary
+        summary = "Duplicate Files Summary:\n"
+        for hash_value, paths in grouped_duplicates.items():
+            summary += f"Hash: {hash_value}, Paths: {', '.join(paths)}\n"
+
+        logging.info(summary)
+        return summary
+
+    def move_confirmed_duplicates(self, destination_directory):
+        duplicates = self.db_operations.fetch_duplicates()
+        file_paths = [duplicate[1] for duplicate in duplicates]
+        self.file_operations.process_and_move_files(file_paths, destination_directory)
