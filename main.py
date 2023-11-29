@@ -18,7 +18,7 @@ class App:
         #self.processor.process_duplicates_memory()
         
         logging.info("Starting process duplicate summary...")
-        self.processor.show_duplicates_summary()
+        self.processor.print_duplicates_summary()
         
         # Wait for user confirmation to move duplicates
         user_input = input("Do you want to move the duplicates to the target directory? (yes/no): ")
@@ -36,7 +36,7 @@ def main():
     args = parser.parse_args()
 
     # Load the configuration file
-    config = Utilities.load_config(args.config)
+    config = Utilities.load_config()
 
     # Override config file values with command line arguments if they are provided
     directory = args.directory if args.directory else config.get('directory')
