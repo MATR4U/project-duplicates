@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from db_operations import DatabaseOperations
 from file_operations import FileOperations
 from utilities import Utilities
-from pathlib import Path, PureWindowsPath, PurePosixPath
+import shutil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -69,16 +69,6 @@ class Processor:
         progress_bar.close()
 
         print(f"Processed all files for duplicates in memory.")
-
-    def _move_confirmed_duplicates(self, confirmed_duplicates, destination_directory):
-        return None
-        #try:
-        #    for file_hash, paths in confirmed_duplicates.items():
-        #        for path in paths[1:]:  # Keeping the first item as original, moving the rest
-        #            self.file_operations.move_file_with_metadata_preserved(path, destination_directory)
-        #            logging.info(f"Moved duplicate {path} to {destination_directory}")
-        #except Exception as e:
-        #    logging.error(f"Error moving confirmed duplicates: {e}")
 
     def get_all_files_batch(self):
         logging.info("Storing all files into the database...")
@@ -147,7 +137,7 @@ class Processor:
 
         logging.info(f"Finished storing files into the database. {total_written} new files were added.")
 
-    def show_duplicates_summary(self):
+    def print_duplicates_summary(self):
         duplicates = self.db_operations.get_duplicates()
         
         filter = [".DS_Store", "@__thumb"]
@@ -158,4 +148,47 @@ class Processor:
                 for item in value:
                     if all(substring not in key for substring in filter):
                         print(f"{key}: {value}")
-                
+
+    #NEW
+    #TODO CHECK FILEOPERATIONS
+    def move_files(self, files):
+        try:
+            for file_hash, paths in files.items():
+                for path in paths[1:]:  # Keeping the first item as original, moving the rest
+                    self.file_operations.move_file_with_metadata_preserved(path, self.dataDestinationDir)
+                    logging.info(f"Moved duplicate {path} to {self.dataDestinationDir}")
+        except Exception as e:
+            logging.error(f"Error moving confirmed duplicates: {e}")
+
+    def move_duplicates(self, data_target_dir):
+        duplicates = self.db_operations.get_duplicates()
+        filter_keywords = [".DS_Store", "@__thumb"]
+
+        # Loop through the duplicates
+        if duplicates:
+            for original_path, duplicate_list in duplicates.items():
+                # Filter out unwanted files
+                if not any(keyword in original_path for keyword in filter_keywords):
+                    for duplicate in duplicate_list:
+                        duplicate_path = duplicate['path']
+                        duplicate_id = duplicate['id']
+                        # Extract year from creation time
+                        year = Utilities.extract_year_from_timestamp(duplicate['creation_time'])
+
+                        # Create the target directory based on the year
+                        target_dir = os.path.join(data_target_dir, year)
+                        if not os.path.exists(target_dir):
+                            os.makedirs(target_dir)
+
+                        # Move the file
+                        target_path = os.path.join(target_dir, os.path.basename(duplicate_path))
+                        shutil.copy2(duplicate_path, target_path) # Copy with metadata
+                        os.remove(duplicate_path)  # Remove the original file
+
+                        # Remove the duplicate entry from the database
+                        self.db_operations.remove_duplicate_entry(duplicate_id)
+
+                    # Remove the original file entry if necessary
+                    self.db_operations.remove_original_entry_if_no_duplicates(original_path)
+                    
+                    print(f"Moved: {duplicate_path} -> {target_path}")

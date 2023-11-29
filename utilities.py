@@ -2,6 +2,7 @@ import datetime
 import requests
 import logging
 import json
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -16,7 +17,11 @@ class Utilities:
         except Exception as e:
             logging.error(f"Error loading configuration: {str(e)}")
             return {}
-        
+    
+    @staticmethod
+    def extract_year_from_timestamp(timestamp):
+        return datetime.fromtimestamp(timestamp).strftime('%Y')
+
     @staticmethod
     def send_notification(message, api_url="https://api.example.com/notifications", api_token="YOUR_API_TOKEN"):
         headers = {

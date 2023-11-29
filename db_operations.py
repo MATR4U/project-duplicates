@@ -363,3 +363,36 @@ class DatabaseOperations:
 
         except Exception as e:
             print(f"An error occurred while fetching duplicates summary: {e}")
+
+#NEW for removal
+    def remove_duplicate_entry(self, duplicate_id):
+        with self.conn:
+            cur = self.conn.cursor()
+            # Delete the duplicate entry from the files table
+            cur.execute("DELETE FROM files WHERE id = ?", (duplicate_id,))
+            
+            # Update the duplicates table to remove the duplicate_id from the JSON array
+            cur.execute("SELECT original_id, duplicate_ids FROM duplicates WHERE json_extract(duplicate_ids, '$') LIKE ?", ('%' + str(duplicate_id) + '%',))
+            result = cur.fetchone()
+            if result:
+                original_id, duplicate_ids_json = result
+                duplicate_ids = json.loads(duplicate_ids_json)
+                duplicate_ids.remove(duplicate_id)
+                if duplicate_ids:  # If there are more duplicates, update the entry
+                    cur.execute("UPDATE duplicates SET duplicate_ids = ? WHERE original_id = ?", (json.dumps(duplicate_ids), original_id))
+                else:  # If no more duplicates, delete the entry
+                    cur.execute("DELETE FROM duplicates WHERE original_id = ?", (original_id,))
+            self.conn.commit()
+
+    def remove_original_entry_if_no_duplicates(self, original_path):
+        with self.conn:
+            cur = self.conn.cursor()
+            # Select the original file's ID based on its path
+            cur.execute("SELECT id FROM files WHERE path = ?", (original_path,))
+            original_id = cur.fetchone()[0]
+            # Check if the original file has any duplicates left
+            cur.execute("SELECT COUNT(*) FROM duplicates WHERE original_id = ?", (original_id,))
+            if cur.fetchone()[0] == 0:
+                # If no duplicates left, delete the original file from the files table
+                cur.execute("DELETE FROM files WHERE id = ?", (original_id,))
+            self.conn.commit()

@@ -1,7 +1,7 @@
 import argparse
 import logging
-import json
 from processor import Processor
+from utilities import Utilities
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -20,32 +20,30 @@ class App:
         logging.info("Starting process duplicate summary...")
         self.processor.show_duplicates_summary()
         
-        #logging.info("Fetching duplicates summary...")
-        # Accessing db_operations via duplicate_processor
-        #duplicates = self.processor.db_operations.fetch_duplicates()
-        
-        # Displaying the duplicates summary
-        #for hash_, paths in duplicates.items():
-        #    print(f"Hash: {hash_}, Paths: {paths}")
-        
         # Wait for user confirmation to move duplicates
-        #user_input = input("Do you want to move the duplicates to the target directory? (yes/no): ")
-        #if user_input.lower() == "yes":
-        #    self.processor.move_confirmed_duplicates(self.destination)
+        user_input = input("Do you want to move the duplicates to the target directory? (yes/no): ")
+        if user_input.lower() == "yes":
+            self.processor.move_duplicates()
         
-        #logging.info("Duplicate processing completed.")
+        logging.info("Duplicate processing completed.")
 
 def main():
+    # Initialize the argument parser
     parser = argparse.ArgumentParser(description="Find and manage duplicate files.")
-    parser.add_argument("directory", help="Path to the directory to search.")
-    parser.add_argument("destination", help="Path to the destination folder.")
+    parser.add_argument("directory", help="Path to the directory to search.", nargs='?', default=None)
+    parser.add_argument("destination", help="Path to the destination folder.", nargs='?', default=None)
+    parser.add_argument("-c", "--config", help="Path to the configuration file.", default='config.json')
     args = parser.parse_args()
+
+    # Load the configuration file
+    config = Utilities.load_config(args.config)
+
+    # Override config file values with command line arguments if they are provided
+    directory = args.directory if args.directory else config.get('directory')
+    destination = args.destination if args.destination else config.get('destination')
     
-    with open('config.json', 'r') as file:
-        config = json.load(file)
-    
-    finder = App(args.directory, args.destination)
-    finder.run()
+    app = App(directory, destination)
+    app.run()
 
 if __name__ == "__main__":
     main()
