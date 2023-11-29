@@ -1,0 +1,10 @@
+DataSource
+DataTarget
+*.db
+*_
+.*
+*.exe
+sqlite3
+!.gitignore
+!.vscode
+!.setup
