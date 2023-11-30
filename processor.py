@@ -31,12 +31,12 @@ class Processor:
         progress_bar.close()
         return filepaths
 
-    def process_duplicates(self):
+    def add_duplicates(self):
         """
         Goes through all files in the database, identifies duplicates, and processes them using in-memory calculations.
         """
         # Step 1: Retrieve all file entries and store them in memory.
-        all_files = self.db_operations.fetch_originals()
+        all_files = self.db_operations.fetch_all_files()
 
         # Step 2: Group entries by their hash.
         files_by_hash = {}
@@ -56,8 +56,8 @@ class Processor:
                 original_id = files[0][0]
                 duplicate_ids = [file_id for file_id, _ in files[1:]]
 
-                # Step 4: Insert the duplicates into the duplicates table and mark them in the files table.
-                self.db_operations.processDuplicates(original_id, duplicate_ids)
+                # Step 4: Insert the duplicates into the duplicates table.
+                self.db_operations.process_duplicates(original_id, duplicate_ids)
 
             # Update the progress bar
             progress_bar.update(1)
@@ -67,7 +67,7 @@ class Processor:
 
         print(f"Processed all files for duplicates in memory.")
 
-    def record_files(self):
+    def add_files(self):
         logging.info("Storing all files into the database...")
 
         filepaths = sorted(list(self._get_all_filepaths()))
@@ -97,7 +97,7 @@ class Processor:
                         current_batch.append(data)
                         if len(current_batch) >= batch_size:
                             # Write the current batch to the database
-                            self.db_operations.write_files_to_db_batch(current_batch)
+                            self.db_operations.add_files(current_batch)
                             total_written += len(current_batch)  # Update the total written counter
                             current_batch = []  # Reset the batch list after writing
                 except Exception as e:
@@ -108,7 +108,7 @@ class Processor:
 
             # Make sure to write any remaining files that didn't make up a full batch
             if current_batch:
-                self.db_operations.write_files_to_db_batch(current_batch)
+                self.db_operations.add_files(current_batch)
                 total_written += len(current_batch)
 
             progress_bar.close()
@@ -116,7 +116,7 @@ class Processor:
         logging.info(f"Finished storing files into the database. {total_written} new files were added.")
 
     def print_duplicates_summary(self):
-        duplicates = self.db_operations.get_duplicates()
+        duplicates = self.db_operations.get_files_and_duplicates()
 
         # Print the paths of the duplicates
         if duplicates:
@@ -125,44 +125,44 @@ class Processor:
                     print(f"{key}: {value}")
 
     def move_duplicates(self):
-        duplicates = self.db_operations.get_duplicates()
+        duplicates = self.db_operations.get_files_and_duplicates()
         filter_keywords = [".DS_Store", "@__thumb"]
 
-        try:
-            # Loop through the duplicates
-            if duplicates:
-                for original_path, duplicate_list in duplicates.items():
-                    # Filter out unwanted files
-                    if not any(keyword in original_path for keyword in filter_keywords):
-                        for duplicate in duplicate_list:
-                            duplicate_path = duplicate[1] #path
-                            duplicate_id = duplicate[0] #id
-                            # Extract year from creation time
-                            year = Utilities.extract_year_from_timestamp(duplicate[2]) #creation_time
+        for original_path, duplicate_list in duplicates.items():
+            # Filter out unwanted files
+            if any(keyword in original_path for keyword in filter_keywords):
+                continue
 
-                            # Create the target directory based on the year
-                            target_dir = os.path.join(self.dataDestinationDir, str(year))
-                            if not os.path.exists(target_dir):
-                                os.makedirs(target_dir)
+            for duplicate in duplicate_list:
+                duplicate_id, duplicate_path, creation_time = duplicate
+                year = Utilities.extract_year_from_timestamp(creation_time)  # creation_time
 
-                            # Move the file
-                            target_path = os.path.join(target_dir, os.path.basename(duplicate_path))
-                            shutil.copy2(duplicate_path, target_path) # Copy with metadata
-                            os.remove(duplicate_path)  # Remove the original file
+                if not os.path.exists(duplicate_path):
+                    logging.error(f"File not found: {duplicate_path}")
+                    self.db_operations.process_deleted_files(duplicate_id)
+                    self.db_operations.remove_duplicate_entry(duplicate_id)
+                    continue
 
-                            # Get the folder containing the file
-                            folder_path = os.path.dirname(duplicate_path)
-                            # Check if the folder is empty
-                            if not os.listdir(folder_path):
-                                # If the folder is empty, delete it
-                                os.rmdir(folder_path)
+                # Create the target directory based on the year
+                target_dir = os.path.join(self.dataDestinationDir, str(year))
+                os.makedirs(target_dir, exist_ok=True)
 
-                            # Remove the duplicate entry from the database
-                            self.db_operations.remove_duplicate_entry(duplicate_id)
+                # Move the file
+                target_path = os.path.join(target_dir, os.path.basename(duplicate_path))
+                try:
+                    shutil.copy2(duplicate_path, target_path)  # Copy with metadata
+                    os.remove(duplicate_path)  # Remove the original file
 
-                        # Remove the original file entry if necessary
-                        self.db_operations.remove_original_entry_if_no_duplicates(original_path)
-                        
-                        print(f"Moved: {duplicate_path} -> {target_path}")
-        except FileNotFoundError as e:
-            logging.error("An error occurred:", e)
+                    # Remove the empty folder if applicable
+                    folder_path = os.path.dirname(duplicate_path)
+                    if not os.listdir(folder_path):
+                        os.rmdir(folder_path)
+                    
+                    print(f"Moved File: {duplicate_path} -> {target_path}")
+                except Exception as e:
+                    logging.error(f"Error moving file {duplicate_path}: {e}")
+                    continue
+
+                # Update the database
+                #TODO does not remove the duplicate entry even if the file was already moved.
+                self.db_operations.remove_duplicate_entry(duplicate_id)

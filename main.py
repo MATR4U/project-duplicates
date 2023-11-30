@@ -11,19 +11,20 @@ class App:
         self.processor = Processor(dataSourceDir, dataDestinationDir)
     
     def run(self):
-        logging.info("Starting process store in database...")
-        self.processor.record_files()
+        #logging.info("Starting process store in database...")
+        self.processor.add_files()
 
-        logging.info("Starting process find and mark duplicates...")
-        self.processor.process_duplicates()
+        #logging.info("Starting process find and mark duplicates...")
+        self.processor.add_duplicates()
         
         logging.info("Starting process duplicate summary...")
         self.processor.print_duplicates_summary()
         
         # Wait for user confirmation to move duplicates
-        user_input = input("Do you want to move the duplicates to the target directory? (yes/no): ")
-        if user_input.lower() == "yes":
-            self.processor.move_duplicates()
+        ##
+        # user_input = input("Do you want to move the duplicates to the target directory? (yes/no): ")
+        #if user_input.lower() == "yes":
+        #self.processor.move_duplicates()
         
         logging.info("Duplicate processing completed.")
 

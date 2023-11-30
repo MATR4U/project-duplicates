@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["DataSource", "DataTarget"]
+            "args": ["F:\\Memories", "DataTarget"]
         }
     ]
 }
