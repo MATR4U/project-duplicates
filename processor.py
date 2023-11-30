@@ -70,7 +70,7 @@ class Processor:
         Goes through all files in the database, identifies duplicates, and processes them using in-memory calculations.
         """
         # Step 1: Retrieve all file entries and store them in memory.
-        all_files = self.db_operations.fetchall()
+        all_files = self.db_operations.fetch_originals()
 
         # Step 2: Group entries by their hash.
         files_by_hash = {}

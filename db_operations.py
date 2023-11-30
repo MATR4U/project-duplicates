@@ -71,7 +71,26 @@ class DatabaseOperations:
         try:
             with self.conn:
                 cur = self.conn.cursor()
-                # ... existing logic ...
+                # Check if original_id already has an entry in the duplicates table
+                cur.execute("SELECT duplicate_ids FROM duplicates WHERE original_id = ?", (original_id,))
+                existing_entry = cur.fetchone()
+
+                if existing_entry:
+                    # Load the existing duplicate IDs and convert them to a set for uniqueness
+                    existing_duplicate_ids_set = set(json.loads(existing_entry[0]))
+                    
+                    # Convert the new duplicate IDs list to a set and combine it with the existing set
+                    new_duplicate_ids_set = existing_duplicate_ids_set.union(set(duplicate_ids))
+                    
+                    # Convert the combined set back to a list and JSON encode it for database update
+                    new_duplicate_ids_json = json.dumps(list(new_duplicate_ids_set))
+                    
+                    # Update the existing entry with new unique duplicate_ids
+                    cur.execute("UPDATE duplicates SET duplicate_ids = ? WHERE original_id = ?", (new_duplicate_ids_json, original_id))
+                else:
+                    # Insert new entry into duplicates table with the unique list of duplicate IDs
+                    cur.execute("INSERT INTO duplicates (original_id, duplicate_ids) VALUES (?, ?)", (original_id, json.dumps(duplicate_ids)))
+
         except sqlite3.Error as e:
             logging.error(f"Error processing duplicates: {e}")
             raise
@@ -109,8 +128,8 @@ class DatabaseOperations:
         """
         try:
             with self.conn:
-                cursor = self.conn.cursor()
-                cursor.executemany(query, file_data_list)
+                cur = self.conn.cursor()
+                cur.executemany(query, file_data_list)
                 logging.info(f"Batch of {len(file_data_list)} files inserted into the database.")
         except sqlite3.Error as e:
             logging.error(f"Error inserting batch into database: {e}")
@@ -125,14 +144,15 @@ class DatabaseOperations:
             list of tuples: Each tuple contains the original file ID, path, and a JSON string of duplicate IDs.
         """
         try:
-            with self.conn.cursor() as cursor:
-                cursor.execute("""
+            with self.conn:
+                cur = self.conn.cursor()
+                cur.execute("""
                     SELECT f.id, f.path as original_path, d.duplicate_ids
                     FROM files f
                     INNER JOIN duplicates d ON f.id = d.original_id
                     WHERE f.marked = 0
                 """)
-                return cursor.fetchall()
+                return cur.fetchall()
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")
             # Depending on your application's requirements, you might want to re-raise the exception
