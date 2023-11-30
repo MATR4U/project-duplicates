@@ -12,10 +12,10 @@ class App:
     
     def run(self):
         logging.info("Starting process store in database...")
-        #self.processor.get_all_files_batch_optimized()
+        self.processor.record_files()
 
         logging.info("Starting process find and mark duplicates...")
-        #self.processor.process_duplicates_memory()
+        self.processor.process_duplicates()
         
         logging.info("Starting process duplicate summary...")
         self.processor.print_duplicates_summary()

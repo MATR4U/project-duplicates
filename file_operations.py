@@ -134,17 +134,20 @@ class FileOperations:
         return {k: v for k, v in duplicates.items() if len(v) > 1}
 
     @staticmethod
-    def file_exists_and_same(source, destination):
+    def is_file_exist(file_path):
         """Check if destination file exists and is identical to the source."""
-        if os.path.exists(destination):
-            return filecmp.cmp(source, destination, shallow=False)
-        return False
-
+        return os.path.exists(file_path)
+    
+    @staticmethod
+    def is_file_same(source, destination):
+        """Check if destination file exists and is identical to the source."""
+        return filecmp.cmp(source, destination, shallow=False)
+        
     @staticmethod
     def move_file_with_metadata_preserved(source, destination):
         """Move a file and preserve its metadata."""
         try:
-            if not FileOperations.file_exists_and_same(source, destination):
+            if not (FileOperations.is_file_exist and FileOperations.is_file_same(source, destination)):
                 shutil.move(source, destination)
                 if os.name in ["posix"]:
                     metadata = os.stat(destination)

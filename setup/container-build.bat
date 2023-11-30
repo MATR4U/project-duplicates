@@ -1,0 +1,1 @@
+docker build -t sqlite-container -f ../Dockerfile .

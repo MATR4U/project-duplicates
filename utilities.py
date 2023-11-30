@@ -20,7 +20,7 @@ class Utilities:
     
     @staticmethod
     def extract_year_from_timestamp(timestamp):
-        return datetime.fromtimestamp(timestamp).strftime('%Y')
+        return datetime.fromisoformat(timestamp).year
 
     @staticmethod
     def send_notification(message, api_url="https://api.example.com/notifications", api_token="YOUR_API_TOKEN"):

@@ -1,5 +1,5 @@
 {
-    "database_name": "duplicates.db",
+    "database_name": "duplicates_datasource.db",
     "batch_size": 100,
     "api_endpoint": "https://api.example.com/notifications",
     "api_token": "YOUR_API_TOKEN"

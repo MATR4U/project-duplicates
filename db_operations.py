@@ -100,80 +100,6 @@ class DatabaseOperations:
 
             self.conn.commit()
 
-    def process_all_files_for_duplicates(self):
-        """
-        Goes through all files in the database, identifies duplicates, inserts them into
-        the duplicates table, and marks the duplicates in the files table.
-        """
-        try:
-            with self.conn:
-                cur = self.conn.cursor()
-                
-                # Get all unique hashes with more than one file associated
-                cur.execute("""
-                    SELECT hash
-                    FROM files
-                    GROUP BY hash
-                    HAVING COUNT(hash) > 1
-                """)
-                all_hashes_with_duplicates = [row[0] for row in cur.fetchall()]
-
-                # Initialize the progress bar
-                progress_bar = tqdm(total=len(all_hashes_with_duplicates), desc="Processing duplicates", unit="hash")
-
-                for file_hash in all_hashes_with_duplicates:
-                    # Get the ID of the original file (the oldest file by creation time)
-                    cur.execute("""
-                        SELECT id
-                        FROM files
-                        WHERE hash = ?
-                        ORDER BY creation_time ASC
-                        LIMIT 1
-                    """, (file_hash,))
-                    original_id = cur.fetchone()[0]
-                    
-                    # Get the IDs of the duplicate files
-                    cur.execute("""
-                        SELECT id
-                        FROM files
-                        WHERE hash = ? AND id != ?
-                        ORDER BY creation_time ASC
-                    """, (file_hash, original_id))
-                    duplicates = [row[0] for row in cur.fetchall()]
-                    
-                    # Insert into duplicates table
-                    if duplicates:
-                        cur.execute("""
-                            INSERT INTO duplicates (original_id, duplicate_ids)
-                            VALUES (?, ?)
-                        """, (original_id, json.dumps(duplicates)))
-                    
-                    # Mark the duplicates in the files table
-                    cur.executemany("""
-                        UPDATE files
-                        SET marked = 1
-                        WHERE id = ?
-                    """, [(dup_id,) for dup_id in duplicates])
-
-                    # Update the progress bar
-                    progress_bar.update(1)
-
-                # Finalize the progress bar
-                progress_bar.close()
-                self.conn.commit()
-                print(f"Processed all files for duplicates.")
-
-        except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
-
-    def hash_exists_in_db(self, file_hash):
-        """
-        Check if a given hash already exists in the database.
-        """
-        with self.conn:
-            result = self.conn.execute("SELECT 1 FROM files WHERE hash=?", (file_hash,)).fetchone()
-            return bool(result)
-
     def path_exists_in_db(self, filepath):
         # Check if the file path exists in the database
         with self.conn:
@@ -193,26 +119,7 @@ class DatabaseOperations:
             logging.error(f"Error retrieving existing paths from the database: {e}")
             # Handle the exception as needed, possibly re-raise or return an empty set
             return set()
-        
-    def write_file_to_db(self, file_data):
-        """Insert the file data into the database if the path does not exist."""
-        try:
-            with self.conn:
-                cur = self.conn.cursor()
-                # Check if the path already exists in the database
-                if not self.path_exists_in_db(file_data[1]):
-                    cur.execute("""
-                        INSERT INTO files (hash, path, size, modification_time, access_time, creation_time)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    """, file_data)
-                    self.conn.commit()
-                    logging.info(f"File data for '{file_data[1]}' has been inserted into the database.")
-                else:
-                    logging.info(f"File '{file_data[1]}' already exists in the database. No insertion made.")
-        except Exception as e:
-            logging.error(f"Error writing file to database: {e}")
-            raise
-
+    
     def write_files_to_db_batch(self, file_data_list):
         """Insert multiple file data entries into the database."""
         
@@ -230,63 +137,6 @@ class DatabaseOperations:
             logging.error(f"Error inserting batch into database: {e}")
             raise
 
-    def get_file_hash(self, filepath):
-        try:
-            self.conn.cursor().execute("SELECT hash FROM files WHERE path = ?", (filepath,))
-            result = self.conn.cursor().fetchone()
-            if result:
-                return result[0]
-            return None
-        except Exception as e:
-            logging.error(f"Error fetching file hash from database: {str(e)}")
-            return None
-
-    def get_all_paths_by_hash(self, file_hash):
-        self.conn.cursor().execute("""
-            SELECT path FROM file_paths WHERE hash = ?
-        """, (file_hash,))
-        return self.conn.cursor().fetchall()
-
-    def add_file_hash_and_path(self, file_hash, file_data, filepath):
-        # Check if the hash already exists in file_hashes
-        if not self.hash_exists_in_db(file_hash):
-            # Insert into file_hashes if not exist
-            self.conn.cursor().execute("""
-                INSERT INTO file_hashes (hash, size, mtime, atime, ctime)
-                VALUES (?, ?, ?, ?, ?)
-            """, (file_hash,) + file_data)
-        
-        # Insert into file_paths
-        try:
-            self.conn.cursor().execute("""
-                INSERT INTO file_paths (hash, path)
-                VALUES (?, ?)
-            """, (file_hash, filepath))
-        except sqlite3.IntegrityError:
-            # If the path already exists, it's a duplicate; handle accordingly
-            pass
-
-        self.conn.commit()
-
-    def hash_exists_in_db(self, file_hash):
-        self.conn.cursor().execute("""
-            SELECT 1 FROM file_hashes WHERE hash = ?
-        """, (file_hash,))
-        return  self.conn.cursor().fetchone() is not None
-    
-    def update_paths_for_hash(self, file_hash, updated_paths):
-        self.conn.cursor().execute("UPDATE files SET paths = ? WHERE hash = ?", (updated_paths, file_hash))
-        self.conn.commit()
-
-    def cleanup_database(self, days_old=30):
-        try:
-            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_old)
-            with self.conn:
-                self.conn.execute("DELETE FROM files WHERE date_added < ?", (cutoff_date,))
-            logging.info(f"Cleaned up entries older than {days_old} days from the database.")
-        except Exception as e:
-            logging.error(f"Error cleaning up database: {str(e)}")
-
     def fetch_originals(self):
         try:
             cur = self.conn.cursor()
@@ -300,34 +150,7 @@ class DatabaseOperations:
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")
             return []
-    
-    def fetch_duplicates(self):
-        # Assuming that self.conn is a persistent connection managed outside this method.
-        try:
-            with self.conn:  # The connection context manager will handle transactions.
-                self.conn.cursor().execute("""
-                    SELECT hash, GROUP_CONCAT(path) 
-                    FROM files 
-                    WHERE marked = 0
-                    GROUP BY hash
-                    HAVING COUNT(hash) > 1
-                """)
-                duplicates = self.conn.cursor().fetchall()
-                    
-            # Process the results outside of the database transaction.
-            duplicates_dict = {} # {hash_: paths.split(",") for hash_, paths in duplicates}
-            for hash_, paths in duplicates:
-                path_list = paths.split(",")
-                duplicates_dict[hash_] = path_list
-                # Log the duplicates found
-                logging.info(f"Duplicate found: {hash_} with files: {path_list}")
-
-            return duplicates_dict
-
-        except sqlite3.Error as e:
-            logging.error(f"Error fetching duplicates from database: {str(e)}")
-            return {}
-
+        
     def get_duplicates(self):
         """
         Fetches and prints a summary of the original files and their duplicates.
@@ -345,7 +168,7 @@ class DatabaseOperations:
                 # Fetch the paths for each duplicate ID
                 cursor = self.conn.cursor()
                 cursor.execute("""
-                    SELECT id, path
+                    SELECT id, path, creation_time
                     FROM files
                     WHERE id IN ({0})
                 """.format(",".join("?" for _ in duplicate_ids)), duplicate_ids)
@@ -354,7 +177,7 @@ class DatabaseOperations:
                 duplicates = cursor.fetchall()
 
                 # Build a set of tuples (duplicate_id, duplicate_path) for the duplicates
-                duplicates_set = {(dup_id, dup_path) for dup_id, dup_path in duplicates}
+                duplicates_set = {(dup_id, dup_path, create_time) for dup_id, dup_path, create_time in duplicates}
 
                 # Map the original path to its duplicates
                 originals_and_duplicates[original_path] = duplicates_set
@@ -364,25 +187,30 @@ class DatabaseOperations:
         except Exception as e:
             print(f"An error occurred while fetching duplicates summary: {e}")
 
-#NEW for removal
+    #TODO improve by do not DELETE moved files
     def remove_duplicate_entry(self, duplicate_id):
-        with self.conn:
-            cur = self.conn.cursor()
-            # Delete the duplicate entry from the files table
-            cur.execute("DELETE FROM files WHERE id = ?", (duplicate_id,))
-            
-            # Update the duplicates table to remove the duplicate_id from the JSON array
-            cur.execute("SELECT original_id, duplicate_ids FROM duplicates WHERE json_extract(duplicate_ids, '$') LIKE ?", ('%' + str(duplicate_id) + '%',))
-            result = cur.fetchone()
-            if result:
-                original_id, duplicate_ids_json = result
-                duplicate_ids = json.loads(duplicate_ids_json)
-                duplicate_ids.remove(duplicate_id)
-                if duplicate_ids:  # If there are more duplicates, update the entry
-                    cur.execute("UPDATE duplicates SET duplicate_ids = ? WHERE original_id = ?", (json.dumps(duplicate_ids), original_id))
-                else:  # If no more duplicates, delete the entry
-                    cur.execute("DELETE FROM duplicates WHERE original_id = ?", (original_id,))
-            self.conn.commit()
+        try:
+            with self.conn:
+                cur = self.conn.cursor()
+
+                # Delete the duplicate entry from the files table
+                cur.execute("DELETE FROM files WHERE id = ?", (duplicate_id,))
+
+                # Update the duplicates table
+                cur.execute("SELECT original_id, duplicate_ids FROM duplicates")
+                for original_id, duplicate_ids_json in cur.fetchall():
+                    duplicate_ids = json.loads(duplicate_ids_json)
+                    if duplicate_id in duplicate_ids:
+                        duplicate_ids.remove(duplicate_id)
+                        if duplicate_ids:  # If there are more duplicates, update the entry
+                            cur.execute("UPDATE duplicates SET duplicate_ids = ? WHERE original_id = ?", (json.dumps(duplicate_ids), original_id))
+                        else:  # If no more duplicates, delete the entry
+                            cur.execute("DELETE FROM duplicates WHERE original_id = ?", (original_id))
+                        
+        except sqlite3.IntegrityError as ie:
+            print("Integrity error occurred:", ie)
+        except sqlite3.Error as e:
+            print("Database error occurred:", e)
 
     def remove_original_entry_if_no_duplicates(self, original_path):
         with self.conn:

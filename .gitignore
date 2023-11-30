@@ -1,5 +1,4 @@
-DataSource
-DataTarget
+/Data*
 *.db
 *_
 .*

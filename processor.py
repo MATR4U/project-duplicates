@@ -31,10 +31,41 @@ class Processor:
         progress_bar.close()
         return filepaths
     
+    #TODO UNUSED
     def process_duplicates_db(self):
         self.db_operations.process_all_files_for_duplicates()     
 
-    def process_duplicates_memory(self):
+    #TODO UNUSED
+    def get_all_files_batch(self):
+        logging.info("Storing all files into the database...")
+        
+        filepaths = list(self._get_all_filepaths())  # Make sure this is a list if not already
+        batch_size = 100  # Adjust the batch size as needed
+        batches = [filepaths[i:i + batch_size] for i in range(0, len(filepaths), batch_size)]
+
+        for batch in tqdm(batches, desc="Storing files", unit="batch"):
+            file_data_batch = []
+            for filepath in batch:
+                if not self.db_operations.path_exists_in_db(filepath):
+                    file_data =  self.file_operations.get_file_metadata(filepath)
+                    file_data_batch.append(file_data)
+
+            # Insert the batch into the database
+            self.db_operations.write_files_to_db_batch(file_data_batch)
+
+        logging.info("Finished storing files into the database.")
+
+    #TODO UNUSED, CHECK FILEOPERATIONS
+    def move_files(self, files):
+        try:
+            for file_hash, paths in files.items():
+                for path in paths[1:]:  # Keeping the first item as original, moving the rest
+                    self.file_operations.move_file_with_metadata_preserved(path, self.dataDestinationDir)
+                    logging.info(f"Moved duplicate {path} to {self.dataDestinationDir}")
+        except Exception as e:
+            logging.error(f"Error moving confirmed duplicates: {e}")
+
+    def process_duplicates(self):
         """
         Goes through all files in the database, identifies duplicates, and processes them using in-memory calculations.
         """
@@ -70,26 +101,7 @@ class Processor:
 
         print(f"Processed all files for duplicates in memory.")
 
-    def get_all_files_batch(self):
-        logging.info("Storing all files into the database...")
-        
-        filepaths = list(self._get_all_filepaths())  # Make sure this is a list if not already
-        batch_size = 100  # Adjust the batch size as needed
-        batches = [filepaths[i:i + batch_size] for i in range(0, len(filepaths), batch_size)]
-
-        for batch in tqdm(batches, desc="Storing files", unit="batch"):
-            file_data_batch = []
-            for filepath in batch:
-                if not self.db_operations.path_exists_in_db(filepath):
-                    file_data =  self.file_operations.get_file_metadata(filepath)
-                    file_data_batch.append(file_data)
-
-            # Insert the batch into the database
-            self.db_operations.write_files_to_db_batch(file_data_batch)
-
-        logging.info("Finished storing files into the database.")
-
-    def get_all_files_batch_optimized(self):
+    def record_files(self):
         logging.info("Storing all files into the database...")
 
         filepaths = sorted(list(self._get_all_filepaths()))
@@ -139,56 +151,52 @@ class Processor:
 
     def print_duplicates_summary(self):
         duplicates = self.db_operations.get_duplicates()
-        
-        filter = [".DS_Store", "@__thumb"]
 
         # Print the paths of the duplicates
         if duplicates:
             for key, value in duplicates.items():
                 for item in value:
-                    if all(substring not in key for substring in filter):
-                        print(f"{key}: {value}")
+                    print(f"{key}: {value}")
 
-    #NEW
-    #TODO CHECK FILEOPERATIONS
-    def move_files(self, files):
-        try:
-            for file_hash, paths in files.items():
-                for path in paths[1:]:  # Keeping the first item as original, moving the rest
-                    self.file_operations.move_file_with_metadata_preserved(path, self.dataDestinationDir)
-                    logging.info(f"Moved duplicate {path} to {self.dataDestinationDir}")
-        except Exception as e:
-            logging.error(f"Error moving confirmed duplicates: {e}")
-
-    def move_duplicates(self, data_target_dir):
+    def move_duplicates(self):
         duplicates = self.db_operations.get_duplicates()
         filter_keywords = [".DS_Store", "@__thumb"]
 
-        # Loop through the duplicates
-        if duplicates:
-            for original_path, duplicate_list in duplicates.items():
-                # Filter out unwanted files
-                if not any(keyword in original_path for keyword in filter_keywords):
-                    for duplicate in duplicate_list:
-                        duplicate_path = duplicate['path']
-                        duplicate_id = duplicate['id']
-                        # Extract year from creation time
-                        year = Utilities.extract_year_from_timestamp(duplicate['creation_time'])
+        try:
+            # Loop through the duplicates
+            if duplicates:
+                for original_path, duplicate_list in duplicates.items():
+                    # Filter out unwanted files
+                    if not any(keyword in original_path for keyword in filter_keywords):
+                        for duplicate in duplicate_list:
+                            duplicate_path = duplicate[1] #path
+                            duplicate_id = duplicate[0] #id
+                            # Extract year from creation time
+                            year = Utilities.extract_year_from_timestamp(duplicate[2]) #creation_time
 
-                        # Create the target directory based on the year
-                        target_dir = os.path.join(data_target_dir, year)
-                        if not os.path.exists(target_dir):
-                            os.makedirs(target_dir)
+                            # Create the target directory based on the year
+                            target_dir = os.path.join(self.dataDestinationDir, str(year))
+                            if not os.path.exists(target_dir):
+                                os.makedirs(target_dir)
 
-                        # Move the file
-                        target_path = os.path.join(target_dir, os.path.basename(duplicate_path))
-                        shutil.copy2(duplicate_path, target_path) # Copy with metadata
-                        os.remove(duplicate_path)  # Remove the original file
+                            # Move the file
+                            target_path = os.path.join(target_dir, os.path.basename(duplicate_path))
+                            shutil.copy2(duplicate_path, target_path) # Copy with metadata
+                            os.remove(duplicate_path)  # Remove the original file
 
-                        # Remove the duplicate entry from the database
-                        self.db_operations.remove_duplicate_entry(duplicate_id)
+                            # Get the folder containing the file
+                            folder_path = os.path.dirname(duplicate_path)
+                            # Check if the folder is empty
+                            if not os.listdir(folder_path):
+                                # If the folder is empty, delete it
+                                os.rmdir(folder_path)
 
-                    # Remove the original file entry if necessary
-                    self.db_operations.remove_original_entry_if_no_duplicates(original_path)
-                    
-                    print(f"Moved: {duplicate_path} -> {target_path}")
+                            # Remove the duplicate entry from the database
+                            self.db_operations.remove_duplicate_entry(duplicate_id)
+
+                        # Remove the original file entry if necessary
+                        self.db_operations.remove_original_entry_if_no_duplicates(original_path)
+                        
+                        print(f"Moved: {duplicate_path} -> {target_path}")
+        except FileNotFoundError as e:
+            print("An error occurred:", e)
