@@ -30,40 +30,6 @@ class Processor:
 
         progress_bar.close()
         return filepaths
-    
-    #TODO UNUSED
-    def process_duplicates_db(self):
-        self.db_operations.process_all_files_for_duplicates()     
-
-    #TODO UNUSED
-    def get_all_files_batch(self):
-        logging.info("Storing all files into the database...")
-        
-        filepaths = list(self._get_all_filepaths())  # Make sure this is a list if not already
-        batch_size = 100  # Adjust the batch size as needed
-        batches = [filepaths[i:i + batch_size] for i in range(0, len(filepaths), batch_size)]
-
-        for batch in tqdm(batches, desc="Storing files", unit="batch"):
-            file_data_batch = []
-            for filepath in batch:
-                if not self.db_operations.path_exists_in_db(filepath):
-                    file_data =  self.file_operations.get_file_metadata(filepath)
-                    file_data_batch.append(file_data)
-
-            # Insert the batch into the database
-            self.db_operations.write_files_to_db_batch(file_data_batch)
-
-        logging.info("Finished storing files into the database.")
-
-    #TODO UNUSED, CHECK FILEOPERATIONS
-    def move_files(self, files):
-        try:
-            for file_hash, paths in files.items():
-                for path in paths[1:]:  # Keeping the first item as original, moving the rest
-                    self.file_operations.move_file_with_metadata_preserved(path, self.dataDestinationDir)
-                    logging.info(f"Moved duplicate {path} to {self.dataDestinationDir}")
-        except Exception as e:
-            logging.error(f"Error moving confirmed duplicates: {e}")
 
     def process_duplicates(self):
         """
@@ -199,4 +165,4 @@ class Processor:
                         
                         print(f"Moved: {duplicate_path} -> {target_path}")
         except FileNotFoundError as e:
-            print("An error occurred:", e)
+            logging.error("An error occurred:", e)

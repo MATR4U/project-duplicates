@@ -154,7 +154,7 @@ class DatabaseOperations:
                 """)
                 return cur.fetchall()
         except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
+            logging.error(f"An error occurred: {e}")
             # Depending on your application's requirements, you might want to re-raise the exception
             # raise
             return []
@@ -192,7 +192,7 @@ class DatabaseOperations:
             return originals_and_duplicates
 
         except sqlite3.Error as e:
-            print(f"Database error occurred while fetching duplicates summary: {e}")
+            logging.error(f"Database error occurred while fetching duplicates summary: {e}")
 
 
     #TODO improve by do not DELETE moved files
@@ -216,9 +216,9 @@ class DatabaseOperations:
                             cur.execute("DELETE FROM duplicates WHERE original_id = ?", (original_id))
                         
         except sqlite3.IntegrityError as ie:
-            print("Integrity error occurred:", ie)
+            logging.error("Integrity error occurred:", ie)
         except sqlite3.Error as e:
-            print("Database error occurred:", e)
+            logging.error("Database error occurred:", e)
 
 def remove_original_entry_if_no_duplicates(self, original_path):
     try:
@@ -241,4 +241,4 @@ def remove_original_entry_if_no_duplicates(self, original_path):
                 
     except sqlite3.Error as e:
         # Log or handle the database error
-        print("Database error occurred:", e)
+        logging.error("Database error occurred:", e)
