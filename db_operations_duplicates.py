@@ -8,13 +8,14 @@ from tqdm import tqdm
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DatabaseOperationsDuplicates:
+    """Class provides all database operations for the schema duplicates"""
 
     def __init__(self, cursor: Cursor):
         try:
             self._initialize_schema_duplicates(cursor)
             logging.info("Database initialized successfully.")
         except sqlite3.Error as e:
-            logging.error(f"Error initializing database: {str(e)}")
+            logging.error("Error initializing database: %s", str(e))
             raise
 
     def _initialize_schema_duplicates(self, cursor: Cursor):
@@ -32,7 +33,7 @@ class DatabaseOperationsDuplicates:
                 cursor.execute("SELECT original_id, duplicate_ids FROM duplicates")
                 return cursor.fetchall()
         except sqlite3.Error as e:
-            logging.error(f"Error fetching all duplicates: {e}")
+            logging.error("Error fetching all duplicates: %s", e)
             raise
 
     def add_duplicates(self, cursor: Cursor, original_id, duplicate_ids):
@@ -58,7 +59,7 @@ class DatabaseOperationsDuplicates:
                 cursor.execute("INSERT INTO duplicates (original_id, duplicate_ids) VALUES (?, ?)", (original_id, json.dumps(duplicate_ids)))
 
         except sqlite3.Error as e:
-            logging.error(f"Error processing duplicates: {e}")
+            logging.error("Error processing duplicates: %s", e)
             raise
 
     def remove_marked_deleted(self, cursor: Cursor, id):
@@ -82,7 +83,7 @@ class DatabaseOperationsDuplicates:
 
 
         except sqlite3.Error as e:
-            logging.error(f"Error processing duplicates: {e}")
+            logging.error("Error processing duplicates: %s", e)
             raise
 
         

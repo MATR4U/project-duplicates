@@ -10,12 +10,14 @@ import shutil
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Processor:
+    """Class processess all operations for fils and database"""
+
     def __init__(self, dataSourceDirectory, dataDestinationDir):
         database_name = Utilities.load_config()["database_name"]
         self.dataSourceDirectory=dataSourceDirectory
         self.dataDestinationDir=dataDestinationDir
         self.db_operations = DatabaseOperations(database_name)
-        self.file_operations = FileOperations(dataSourceDirectory, dataDestinationDir)
+        self.file_operations = FileOperations()
 
     def _get_all_filepaths(self):
         # Initialize the progress bar
@@ -102,7 +104,7 @@ class Processor:
                             total_written += len(current_batch)  # Update the total written counter
                             current_batch = []  # Reset the batch list after writing
                 except Exception as e:
-                    logging.error(f"Error processing file {filepath}: {e}")
+                    logging.error("Error processing file {filepath}: %s", e)
 
                 # Update progress bar each time a future is completed
                 progress_bar.update(1)
@@ -114,7 +116,7 @@ class Processor:
 
             progress_bar.close()
 
-        logging.info(f"Finished storing files into the database. {total_written} new files were added.")
+        logging.info("Finished storing files into the database. %s new files were added.", total_written)
 
     def print_duplicates_summary(self):
         duplicates = self.db_operations.get_files_and_duplicates()
@@ -139,7 +141,7 @@ class Processor:
                 year = Utilities.extract_year_from_timestamp(creation_time)  # creation_time
 
                 if not os.path.exists(duplicate_path):
-                    logging.error(f"File not found: {duplicate_path}")
+                    logging.error("File not found: {duplicate_path}")
                     self.db_operations.process_deleted_files(duplicate_id)
                     self.db_operations.remove_duplicate_entry(duplicate_id)
                     continue
@@ -161,7 +163,7 @@ class Processor:
                     
                     print(f"Moved File: {duplicate_path} -> {target_path}")
                 except Exception as e:
-                    logging.error(f"Error moving file {duplicate_path}: {e}")
+                    logging.error("Error moving file {duplicate_path}: %s", e)
                     continue
 
                 # Update the database

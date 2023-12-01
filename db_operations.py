@@ -9,6 +9,7 @@ from db_operations_duplicates import DatabaseOperationsDuplicates
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DatabaseOperations:
+    """Class provides all database operations"""
 
     def __init__(self, db_name="duplicates.db"):
         """
@@ -25,7 +26,7 @@ class DatabaseOperations:
             self.db_operations_duplicates = DatabaseOperationsDuplicates(self.conn.cursor())
             logging.info("Database initialized successfully.")
         except sqlite3.Error as e:
-            logging.error(f"Error initializing database: {str(e)}")
+            logging.error("Error initializing database: %s", str(e))
             raise
 
     def _open_connection(self, db_name):
@@ -42,7 +43,7 @@ class DatabaseOperations:
         try:
             return sqlite3.connect(db_name)
         except sqlite3.Error as e:
-            logging.error(f"Error connecting to the database: {str(e)}")
+            logging.error("Error connecting to the database: %s", str(e))
             raise
 
     def _close_connection(self):
@@ -130,7 +131,7 @@ class DatabaseOperations:
                 all_files = cur.fetchall()
 
         except sqlite3.Error as e:
-            logging.error(f"An error occurred: {e}")
+            logging.error("An error occurred: %s",e)
             # Depending on your application's requirements, you might want to re-raise the exception
             raise
 
@@ -175,7 +176,7 @@ class DatabaseOperations:
             return originals_and_duplicates
 
         except sqlite3.Error as e:
-            logging.error(f"Database error occurred while fetching duplicates summary: {e}")
+            logging.error("Database error occurred while fetching duplicates summary: %s", e)
 
     def remove_duplicate_entry(self, duplicate_id):
         """
@@ -208,8 +209,8 @@ class DatabaseOperations:
                                 cur.execute("DELETE FROM duplicates WHERE original_id = ?", (original_id,))
                 # Else, do nothing if the file is not marked as deleted
 
-        except sqlite3.IntegrityError as ie:
-            logging.error("Integrity error occurred:", ie)
+        except sqlite3.IntegrityError as e:
+            logging.error("Integrity error occurred: %s", {e})
         except sqlite3.Error as e:
-            logging.error("Database error occurred:", e)
+            logging.error("Database error occurred: %s", {e})
 

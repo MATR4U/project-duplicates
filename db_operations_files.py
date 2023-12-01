@@ -8,6 +8,7 @@ from tqdm import tqdm
 logging.basicConfig(level=logging.WARN, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DatabaseOperationsFiles:
+    """Class provides all database operations for the schema files"""
 
     def __init__(self, cursor: Cursor):
         """
@@ -21,7 +22,7 @@ class DatabaseOperationsFiles:
             self._initialize_schema_files(cursor)
             logging.info("Database schema files initialized successfully.")
         except sqlite3.Error as e:
-            logging.error(f"Error initializing database: {str(e)}")
+            logging.error("Error initializing database: %s", str(e))
             raise
 
     def _initialize_schema_files(self, cursor: Cursor):
@@ -61,7 +62,7 @@ class DatabaseOperationsFiles:
                 cursor.execute("SELECT id, hash, creation_time FROM files")
                 return cursor.fetchall()
         except sqlite3.Error as e:
-            logging.error(f"Error fetching all files: {e}")
+            logging.error("Error fetching all files: %s", e)
             raise
 
     def add_files(self, cursor: Cursor, file_data_list):
@@ -79,9 +80,9 @@ class DatabaseOperationsFiles:
         """
         try:
                 cursor.executemany(query, file_data_list)
-                logging.info(f"Batch of {len(file_data_list)} files inserted into the database.")
+                logging.info("Batch of %s files inserted into the database.", len(file_data_list))
         except sqlite3.Error as e:
-            logging.error(f"Error inserting batch into database: {e}")
+            logging.error("Error inserting batch into database: %s", e)
             raise
 
     def get_existing_paths(self, cursor: Cursor):
@@ -99,7 +100,7 @@ class DatabaseOperationsFiles:
                 paths = cursor.fetchall()  # This will get all paths as a list of tuples
                 return set(path[0] for path in paths)  # Convert to a set of strings
         except Exception as e:
-            logging.error(f"Error retrieving existing paths from the database: {e}")
+            logging.error("Error retrieving existing paths from the database: %s", e)
             # Handle the exception as needed, possibly re-raise or return an empty set
             return set()
         
@@ -113,7 +114,7 @@ class DatabaseOperationsFiles:
         """
         try:
                 cursor.execute("UPDATE files SET is_deleted = 1 WHERE id = ?", (file_id,))
-                logging.info(f"File with ID {file_id} marked as deleted.")
+                logging.info("File with ID %s marked as deleted.", file_id)
         except sqlite3.Error as e:
-            logging.error(f"Error marking file as deleted: {e}")
+            logging.error("Error marking file as deleted: %s", e)
             raise
