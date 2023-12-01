@@ -89,7 +89,7 @@ class Processor:
             progress_bar = tqdm(total=len(filepaths), desc="Processing files", unit="file")
 
             # Map the filepaths to future objects, and store them in a dictionary
-            future_to_filepath = {executor.submit(FileOperations.get_file_metadata, filepath): filepath for filepath in filepaths}
+            future_to_filepath = {executor.submit(self.file_operations.get_file_metadata, filepath): filepath for filepath in filepaths}
 
             # Iterate over the future objects as they complete
             for future in as_completed(future_to_filepath):

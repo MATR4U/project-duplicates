@@ -1,7 +1,4 @@
 import logging
-import toga
-from toga.style import Pack
-from toga.style.pack import COLUMN, CENTER
 from processor import Processor
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -10,18 +7,6 @@ class App:
 
     def __init__(self, dataSourceDir, dataDestinationDir):
         self.processor = Processor(dataSourceDir, dataDestinationDir)
-
-    def on_button_click(self, widget):
-        print("Hello World!")
-
-    def runUi(self):
-        return toga.App('First Toga App', 'org.beeware.helloworld', startup = self.runUiBuild())
-
-    def runUiBuild(self):
-        main_box = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
-
-        button = toga.Button('Click me', on_press=self.on_button_click, style=Pack(padding=20))
-        main_box.add(button)
 
     def runCli(self):
    
