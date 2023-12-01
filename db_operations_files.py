@@ -10,6 +10,13 @@ logging.basicConfig(level=logging.WARN, format='%(asctime)s - %(levelname)s - %(
 class DatabaseOperationsFiles:
 
     def __init__(self, cursor: Cursor):
+        """
+        Initializes the DatabaseOperationsFiles object, setting up the schema for the 'files' table.
+        
+        Args:
+            cursor (Cursor): A SQLite cursor object to execute database operations.
+        """
+
         try:
             self._initialize_schema_files(cursor)
             logging.info("Database schema files initialized successfully.")
@@ -18,6 +25,13 @@ class DatabaseOperationsFiles:
             raise
 
     def _initialize_schema_files(self, cursor: Cursor):
+        """
+        Creates the 'files' table in the database if it does not exist.
+
+        Args:
+            cursor (Cursor): A SQLite cursor object to execute database operations.
+        """
+
         cursor.execute("""
                 CREATE TABLE IF NOT EXISTS files (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +47,16 @@ class DatabaseOperationsFiles:
             """)
 
     def fetch_files(self, cursor: Cursor):
+        """
+        Fetches all file records from the 'files' table in the database.
+
+        Args:
+            cursor (Cursor): A SQLite cursor object to execute database operations.
+
+        Returns:
+            list: A list of tuples, each containing file data.
+        """
+
         try:
                 cursor.execute("SELECT id, hash, creation_time FROM files")
                 return cursor.fetchall()
@@ -42,8 +66,13 @@ class DatabaseOperationsFiles:
 
     def add_files(self, cursor: Cursor, file_data_list):
         """
-        Insert multiple file data entries into the database.
+        Inserts multiple file data entries into the 'files' table in the database.
+
+        Args:
+            cursor (Cursor): A SQLite cursor object to execute database operations.
+            file_data_list (list): A list of file data tuples to be added to the database.
         """
+
         query = """
             INSERT INTO files (hash, path, size, modification_time, access_time, creation_time)
             VALUES (:hash, :path, :size, :modification_time, :access_time, :creation_time)
@@ -56,7 +85,15 @@ class DatabaseOperationsFiles:
             raise
 
     def get_existing_paths(self, cursor: Cursor):
-        """Retrieve a set of all file paths that are currently in the database."""
+
+        """
+        Inserts multiple file data entries into the 'files' table in the database.
+
+        Args:
+            cursor (Cursor): A SQLite cursor object to execute database operations.
+            file_data_list (list): A list of file data tuples to be added to the database.
+        """
+                
         try:
                 cursor.execute("SELECT path FROM files")
                 paths = cursor.fetchall()  # This will get all paths as a list of tuples
@@ -66,26 +103,17 @@ class DatabaseOperationsFiles:
             # Handle the exception as needed, possibly re-raise or return an empty set
             return set()
         
-    #TODO not yet used
     def mark_as_deleted(self, cursor: Cursor, file_id):
         """
-        Marks a file entry as deleted in the database.
+        Marks a file entry as deleted in the 'files' table in the database.
 
         Args:
-            file_id (int): The ID of the file to mark as deleted.
+            cursor (Cursor): A SQLite cursor object to execute database operations.
+            file_id (int): The ID of the file to be marked as deleted.
         """
         try:
                 cursor.execute("UPDATE files SET is_deleted = 1 WHERE id = ?", (file_id,))
                 logging.info(f"File with ID {file_id} marked as deleted.")
         except sqlite3.Error as e:
             logging.error(f"Error marking file as deleted: {e}")
-            raise
-
-    #TODO unused
-    def path_exists(self, cursor: Cursor, filepath):
-        try:
-                cursor.execute("SELECT 1 FROM files WHERE path = ?", (filepath,))
-                return cursor.fetchone() is not None
-        except sqlite3.Error as e:
-            logging.error(f"Error checking path existence: {e}")
             raise

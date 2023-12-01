@@ -12,6 +12,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class DatabaseOperations:
 
     def __init__(self, db_name="duplicates.db"):
+        """
+        Initializes the DatabaseOperations object with a connection to the specified SQLite database.
+        It also initializes two sub-classes for handling operations on 'files' and 'duplicates' tables.
+
+        Args:
+            db_name (str): Name of the SQLite database file.
+        """
+
         try:
             self.conn = self._open_connection(db_name)
             self.db_operations_files = DatabaseOperationsFiles(self.conn.cursor())
@@ -22,6 +30,16 @@ class DatabaseOperations:
             raise
 
     def _open_connection(self, db_name):
+        """
+        Establishes and returns a connection to the SQLite database.
+
+        Args:
+            db_name (str): Name of the SQLite database file.
+
+        Returns:
+            sqlite3.Connection: A connection object to the SQLite database.
+        """
+
         try:
             return sqlite3.connect(db_name)
         except sqlite3.Error as e:
@@ -29,29 +47,71 @@ class DatabaseOperations:
             raise
 
     def _close_connection(self):
+        """
+        Closes the database connection if it is open.
+        """
+
         if self.conn and not self.conn.closed:
             self.conn.close()
             logging.info("Database connection closed successfully.")
 
     def get_existing_paths(self):
+        """
+        Fetches and returns existing file paths from the 'files' table in the database.
+
+        Returns:
+            list: A list of file paths.
+        """
+
         return self.db_operations_files.get_existing_paths(self.conn.cursor())
     
     def fetch_all_files(self):
+        """
+        Retrieves all file records from the 'files' table in the database.
+
+        Returns:
+            list: A list of tuples, each containing file data.
+        """
+
         return self.db_operations_files.fetch_files(self.conn.cursor())
 
     def add_files(self, file_data_list):
+        """
+        Adds a list of file data records to the 'files' table in the database.
+
+        Args:
+            file_data_list (list): A list of file data tuples to be added to the database.
+        """
+
         return self.db_operations_files.add_files(self.conn.cursor(), file_data_list)
 
     def process_duplicates(self, original_id, duplicate_ids):
+        """
+        Processes and stores duplicate file information in the 'duplicates' table.
+
+        Args:
+            original_id (int): The ID of the original file.
+            duplicate_ids (list): A list of duplicate file IDs.
+        """
+
         return self.db_operations_duplicates.add_duplicates(self.conn.cursor(), original_id, duplicate_ids)
 
     def process_deleted_files(self, id):
+        """
+        Marks a file as deleted in the 'files' table and updates the 'duplicates' table
+        to reflect this change.
+
+        Args:
+            id (int): The ID of the file to be marked as deleted.
+        """
+
         self.db_operations_files.mark_as_deleted(self.conn.cursor(), id)
         self.db_operations_duplicates.remove_marked_deleted(self.conn.cursor(), id)
                 
     def fetch_files_and_duplicate_json(self):
         """
-        Fetches original files that are not deleted and their associated duplicates.
+        Fetches original files that are not marked as deleted and their associated duplicates
+        from the database.
 
         Returns:
             list of tuples: Each tuple contains the original file ID, path, and a JSON string of duplicate IDs.
@@ -79,8 +139,14 @@ class DatabaseOperations:
     
     def get_files_and_duplicates(self):
         """
-        Fetches and prints a summary of the original files and their duplicates.
+        Fetches and organizes a summary of the original files and their duplicates.
+        This method processes and groups duplicate file information based on the original files.
+
+        Returns:
+            dict: A dictionary where each key is an original file path and its value is a set of tuples
+            for its duplicate files (including ID, path, and creation time).
         """
+
         try:
             originals = self.fetch_files_and_duplicate_json()
             originals_and_duplicates = {}
@@ -113,6 +179,14 @@ class DatabaseOperations:
             logging.error(f"Database error occurred while fetching duplicates summary: {e}")
 
     def remove_duplicate_entry(self, duplicate_id):
+        """
+        Removes an entry from the 'duplicates' table based on the duplicate file ID.
+        If the file is marked as deleted in the 'files' table, it is also removed from the 'duplicates' table.
+
+        Args:
+            duplicate_id (int): The ID of the duplicate file to be removed.
+        """
+        
         try:
             with self.conn:
                 cur = self.conn.cursor()
