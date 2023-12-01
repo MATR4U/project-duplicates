@@ -3,6 +3,7 @@
 *_
 .*
 *.exe
+*db-
 sqlite3
 !.gitignore
 !.vscode

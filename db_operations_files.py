@@ -5,7 +5,7 @@ import datetime
 import json
 from tqdm import tqdm
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.WARN, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DatabaseOperationsFiles:
 

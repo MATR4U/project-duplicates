@@ -67,6 +67,7 @@ class Processor:
 
         print(f"Processed all files for duplicates in memory.")
 
+
     def add_files(self):
         logging.info("Storing all files into the database...")
 
