@@ -1,6 +1,6 @@
 import os
 import logging
-from database_operations import DatabaseOperations
+from db_operations import DatabaseOperations
 from file_operations import FileOperations
 import json
 from concurrent.futures import ProcessPoolExecutor

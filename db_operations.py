@@ -1,6 +1,5 @@
 import sqlite3
 import logging
-import datetime
 import json
 from tqdm import tqdm
 from db_operations_files import DatabaseOperationsFiles
