@@ -1,12 +1,23 @@
 import logging
 from processor import Processor
 
+from fastapi import FastAPI
+from routes.item_routes import router as item_router
+
+import uvicorn
+from pydantic import BaseModel
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class App:
 
     def __init__(self, dataSourceDir, dataDestinationDir):
         self.processor = Processor(dataSourceDir, dataDestinationDir)
+        self.api = FastAPI()
+
+    def runApi(self):
+        self.api.include_router(item_router)
+        uvicorn.run(self.api, port=8000)
 
     def runCli(self):
    
@@ -37,3 +48,7 @@ class App:
         #if user_input.lower() == "yes":
         #self.processor.move_duplicates()
         logging.info("Duplicate processing completed.")
+
+
+
+

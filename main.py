@@ -21,7 +21,8 @@ def main():
     destination = args.destination if args.destination else config.get('destination')
     
     app = App(directory, destination)
-    app.runCli()
+    #app.runCli()
+    app.runApi()
 
 if __name__ == "__main__":
     main()

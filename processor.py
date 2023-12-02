@@ -67,7 +67,7 @@ class Processor:
         # Finalize the progress bar
         progress_bar.close()
 
-        print(f"Processed all files for duplicates in memory.")
+        print("Processed all files for duplicates in memory.")
 
 
     def add_files(self):
