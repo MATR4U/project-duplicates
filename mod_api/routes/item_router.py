@@ -1,6 +1,6 @@
 # app/routes/item_routes.py
 from fastapi import APIRouter
-from models.item_model import Item
+from mod_db.models.item_model import Item
 
 router = APIRouter()
 
