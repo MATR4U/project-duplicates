@@ -13,7 +13,7 @@ class DatabaseOperationsDuplicates:
             self._initialize_schema_duplicates(cursor)
             logging.info("Database initialized successfully.")
         except sqlite3.Error as e:
-            logging.error("Error initializing database: %s", str(e))
+            logging.error("Error initializing database: %s", e)
             raise
 
     def _initialize_schema_duplicates(self, cursor: Cursor):
