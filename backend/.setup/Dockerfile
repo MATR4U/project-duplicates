@@ -6,7 +6,7 @@ FROM alpine:latest
 RUN apk add --no-cache sqlite
 
 # Create a directory for the SQLite database
-WORKDIR /sqlite3
+WORKDIR /data
 
 # Set the entry point to sqlite3
-ENTRYPOINT ["sqlite3"]
+ENTRYPOINT ["data"]
