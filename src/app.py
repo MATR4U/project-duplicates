@@ -1,9 +1,6 @@
 import logging
-import uvicorn
-from fastapi import FastAPI
 from src.core.processor import Processor
-from src.api.routers.item_router import router as item_router
-
+from src.api.server import API
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -11,11 +8,10 @@ class App:
 
     def __init__(self, dataSourceDir, dataDestinationDir):
         self.processor = Processor(dataSourceDir, dataDestinationDir)
-        self.api = FastAPI()
+        self.api = API()
 
     def runApi(self):
-        self.api.include_router(item_router)
-        uvicorn.run(self.api, port=8000)
+        self.api.run()
 
     def runCli(self):
    
