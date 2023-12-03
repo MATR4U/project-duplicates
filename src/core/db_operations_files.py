@@ -1,7 +1,6 @@
 import sqlite3
 from sqlite3 import Cursor
 import logging
-from tqdm import tqdm
 
 logging.basicConfig(level=logging.WARN, format='%(asctime)s - %(levelname)s - %(message)s')
 

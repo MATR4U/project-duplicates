@@ -1,9 +1,8 @@
 import logging
-from processor import Processor
-from fastapi import FastAPI
 import uvicorn
-
-from mod_api.routes.item_router import router as item_router
+from fastapi import FastAPI
+from src.core.processor import Processor
+from src.api.routers.item_router import router as item_router
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

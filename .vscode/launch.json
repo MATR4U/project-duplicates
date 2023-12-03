@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["./test/data/DataSource", "./test/data/DataTarget"]
+            "args": ["./data/DataSource", "./data/DataTarget"]
         }
     ]
 }

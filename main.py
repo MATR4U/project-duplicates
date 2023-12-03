@@ -1,7 +1,7 @@
 import argparse
 import logging
-from utilities import Utilities
-from app import App
+from src.utils.utilities import Utilities
+from src.app import App
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
