@@ -27,14 +27,19 @@ EXPOSE 5432
 COPY /docker-entrypoint-initdb.d/*.sql /docker-entrypoint-initdb.d/
 RUN chmod a+r /docker-entrypoint-initdb.d/*
 
-# Copy the custom pg_hba.conf file into the container
-#COPY .conf/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
-#COPY .conf/postgresql.conf /var/lib/postgresql/data/postgresql.conf
+#Switch to postgres user
+#USER postgres
 
-# Set the working directory to /var/lib/postgresql/data
-#WORKDIR /var/lib/postgresql/data
+# Copy the custom pg_hba.conf file into the container
+COPY .conf/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
+#COPY .conf/postgresql.conf /var/lib/postgresql/data/postgresql.conf
 #- /path/to/customPostgresql.conf:/var/lib/postgresql/data/postgresql.conf
 
+# Restart server
+#RUN /usr/lib/postgresql/15/bin/pg_ctl reload
+
+# Set the working directory to /var/lib/postgresql/data
+WORKDIR /var/lib/postgresql/data
 
 #COPY postgresql.conf      /tmp/postgresql.conf
 #COPY updateConfig.sh      /docker-entrypoint-initdb.d/_updateConfig.sh
