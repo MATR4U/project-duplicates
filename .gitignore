@@ -1,5 +1,4 @@
 # Project Specific
-Data*
 *.db
 *_
 .*
@@ -7,6 +6,7 @@ Data*
 *db-
 *.pyc
 sqlite3
+test-data
 !.gitignore
 !.vscode
 !.setup
