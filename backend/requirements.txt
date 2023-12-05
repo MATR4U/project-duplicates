@@ -7,3 +7,4 @@ fastapi
 uvicorn
 SQLAlchemy
 sqlite-database
+psycopg2
