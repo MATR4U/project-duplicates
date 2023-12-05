@@ -1,6 +1,7 @@
 import logging
 from src.core.processor import Processor
 from src.api.server import API
+from src.db.init_pstgrsql import get_db, init
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -9,6 +10,12 @@ class App:
     def __init__(self, dataSourceDir, dataDestinationDir):
         self.processor = Processor(dataSourceDir, dataDestinationDir)
         self.api = API()
+
+    def runDb(self):
+        init()
+        db = get_db()
+
+        return db
 
     def runApi(self):
         self.api.run()

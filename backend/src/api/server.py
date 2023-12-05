@@ -2,10 +2,10 @@
 import logging
 import uvicorn
 from fastapi import FastAPI
-from src.api.routers.item_router import router as item_router
+from src.api.routers.files import router as item_router
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+        
 class API:
     
     instance = None

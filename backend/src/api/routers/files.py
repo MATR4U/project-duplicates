@@ -1,21 +1,19 @@
-# app/routes/item_routes.py
-from fastapi import APIRouter
-from src.db.models.file_model import File
+# src/api/files.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from src.db.init_pstgrsql import get_db
+from src.db.models.file import File
 
 router = APIRouter()
-
-@router.post("/files/")
-async def create(file: File):
-    return {"path": file.path, "description": file.hash}
 
 @router.get("/")
 async def read():
     return {"Hello": "World"}
 
-@app.post("/items/")
-def create_item(item: Item, db: Session = Depends(get_db)):
-    db_item = Item(**item.dict())
-    db.add(db_item)
+@router.post("/files/", response_model=File)
+def create(file: File, db: Session = Depends(get_db)):
+    item = File(**file.__dict__)
+    db.add(item)
     db.commit()
-    db.refresh(db_item)
-    return db_item
+    db.refresh(item)
+    return item

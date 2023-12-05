@@ -22,7 +22,8 @@ def main():
     
     app = App(directory, destination)
     #app.runCli()
-    app.runApi()
+    #app.runApi()
+    app.runDb()
 
 if __name__ == "__main__":
     main()

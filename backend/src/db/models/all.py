@@ -1,12 +1,23 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Boolean, TIMESTAMP
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+from src.db.init_pstgrsql import Base
 
-Base = declarative_base()
+class File(Base):
+    __tablename__ = 'files'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String)
+    path = Column(String)
+    size = Column(Integer)
+    modification_time = Column(Float)
+    access_time = Column(Float)
+    creation_time = Column(Float)
+    date_added = Column(TIMESTAMP, server_default='now()')
+    is_deleted = Column(Boolean, default=False)
 
 class User(Base):
-    __tablename__ = 'files'
+    __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
