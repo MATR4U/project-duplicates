@@ -1,11 +1,32 @@
-librosa==0.10.1
+# Audio processing library
+#librosa==0.10.1
+
+# Progress bar for tracking operations
 tqdm==4.66.1
+
+# Command-line argument parsing
 argparse==1.1
-toga==0.4.0
-pywebview==4.4.1
-fastapi
-uvicorn
-SQLAlchemy
-sqlalchemy-utils
-sqlite-database
-psycopg2
+
+# Cross-platform GUI library
+#toga==0.4.0
+
+# Web API framework
+fastapi==0.105.0
+
+# ASGI server for FastAPI
+uvicorn==0.25.0
+
+# SQL toolkit and ORM
+SQLAlchemy==2.0.23
+
+# SQLAlchemy extension utilities
+sqlalchemy-utils==0.41.1
+
+# SQLite database library
+sqlite-database==0.3.0
+
+# PostgreSQL adapter (commented out)
+psycopg2==2.9.9
+
+#It provides a simple and intuitive API for sending HTTP requests, handling responses, and managing various aspects of web communication. 
+requests==2.31.0

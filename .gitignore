@@ -6,7 +6,7 @@
 *db-
 *.pyc
 sqlite3
-test-data
+*data*
 
 # Allowed hidden folder
 !.gitignore

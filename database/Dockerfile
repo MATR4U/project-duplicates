@@ -39,9 +39,7 @@ COPY docker-entrypoint-initdb.d/*.sql /docker-entrypoint-initdb.d/
 #RUN /usr/lib/postgresql/15/bin/pg_ctl reload
 
 # Set the working directory to /var/lib/postgresql/data
-WORKDIR /var/lib/postgresql/data
+# WORKDIR /var/lib/postgresql/data
 
 #COPY postgresql.conf      /tmp/postgresql.conf
 #COPY updateConfig.sh      /docker-entrypoint-initdb.d/_updateConfig.sh
-
-EXPOSE 5432:5432

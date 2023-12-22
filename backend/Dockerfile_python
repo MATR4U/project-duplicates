@@ -1,0 +1,17 @@
+# Use the lightweight Alpine Linux as a base image
+FROM python:latest
+
+# Set the working directory
+WORKDIR /app
+
+# Expose the desired port
+EXPOSE 8000
+
+# Copy the application code into the container
+COPY ./ ./
+
+# Update the package repository and install necessary packages
+RUN apt-get upgrade
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+CMD [ "python3". "main.py" ]

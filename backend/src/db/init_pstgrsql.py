@@ -6,7 +6,8 @@ from sqlalchemy.exc import ProgrammingError
 #from sqlalchemy_utils import create_database
 
 # Define the database URL for the PostgreSQL database
-DATABASE_URL = "postgresql://myuser:mypassword@localhost/mydb"
+#TODO externalize in config file!
+DATABASE_URL = "postgresql://myuser:mypassword@matr-db-postgres/mydb"
 
 # Define a base class for your models
 Base = declarative_base()
