@@ -11,21 +11,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class Processor:
     """Class processess all operations for fils and database"""
-
-    def __init__(self, dataSourceDirectory, dataDestinationDir):
-        database_name = Utilities.load_config()["database_name"]
-        self.dataSourceDirectory=dataSourceDirectory
-        self.dataDestinationDir=dataDestinationDir
-        self.db_operations = DatabaseOperations(database_name)
+    
+    def __init__(self):
+        self.db_operations = DatabaseOperations()
         self.file_operations = FileOperations()
 
-    def _get_all_filepaths(self):
+    def _get_all_filepaths(self, dataSourceDirectory):
         # Initialize the progress bar
         progress_bar = tqdm(desc="Walking through directories", unit="dir")
 
         # Walk through the directory structure once and store all file paths
         filepaths = []
-        for dirpath, _, filenames in os.walk(self.dataSourceDirectory):
+        for dirpath, _, filenames in os.walk(dataSourceDirectory):
             for filename in filenames:
                 filepaths.append(os.path.join(dirpath, filename))
             progress_bar.update(1)  # Update progress for each directory
@@ -70,10 +67,10 @@ class Processor:
         print("Processed all files for duplicates in memory.")
 
 
-    def add_files(self):
+    def add_files(self, dataSourceDirectory):
         logging.info("Storing all files into the database...")
 
-        filepaths = sorted(list(self._get_all_filepaths()))
+        filepaths = sorted(list(self._get_all_filepaths(dataSourceDirectory)))
         existing_paths = self.db_operations.get_existing_paths()
 
         # Define the batch size for database writes
@@ -127,7 +124,7 @@ class Processor:
                 for item in value:
                     print(f"{key}: {value}")
 
-    def move_duplicates(self):
+    def move_duplicates(self, dataDestinationDir):
         duplicates = self.db_operations.get_files_and_duplicates()
         filter_keywords = [".DS_Store", "@__thumb"]
 
@@ -147,7 +144,7 @@ class Processor:
                     continue
 
                 # Create the target directory based on the year
-                target_dir = os.path.join(self.dataDestinationDir, str(year))
+                target_dir = os.path.join(dataDestinationDir, str(year))
                 os.makedirs(target_dir, exist_ok=True)
 
                 # Move the file

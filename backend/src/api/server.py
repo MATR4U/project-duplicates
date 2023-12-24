@@ -16,3 +16,14 @@ class API:
     def run(self):
         self.instance.include_router(item_router)
         uvicorn.run(self.instance, port=8000)
+
+    @staticmethod
+    def get_instance():
+        return API.instance
+    
+    @classmethod
+    def startup_event(cls):
+        print("startup fastapi")
+        # Initialize your database or perform any other startup tasks here
+        cls.instance.include_router(item_router)
+        return cls.instance

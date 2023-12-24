@@ -30,3 +30,6 @@ psycopg2==2.9.9
 
 #It provides a simple and intuitive API for sending HTTP requests, handling responses, and managing various aspects of web communication. 
 requests==2.31.0
+
+# Redis client library for Python. Used for caching, session management, and other Redis functionalities in the app.
+redis==3.5.3

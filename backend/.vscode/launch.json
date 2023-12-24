@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["./data/DataSource", "./data/DataTarget"]
+            "args": ["-s", "./data/DataSource", "-d", "./data/DataTarget", "-du", "postgresql://myuser:mypassword@matr-database-postgres/mydb"]
         }
     ]
 }
