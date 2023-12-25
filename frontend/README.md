@@ -4,12 +4,12 @@
 docker login
 
 # CONTAINER BUILD
-docker build -t doc1024/matr:frontend-latest -f Dockerfile .
+docker build -t doc1024/matr:frontend-latest -f Dockerfile_frontend .
 docker push doc1024/matr:frontend-latest
 
 # CONTAINER RUN
 docker pull doc1024/matr:frontend-latest
-docker run --publish 3000:3000 --name matr-frontend -d doc1024/matr:frontend-latest
+docker run --name matr-frontend -d doc1024/matr:frontend-latest
 
 # CONTAINER STOP/KILL
 docker stop matr-frontend

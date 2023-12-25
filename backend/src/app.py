@@ -1,38 +1,21 @@
 import logging
 from src.core.processor import Processor
 from src.api.server import API
-from src.utils.config import Config
-from src.db.database import Database
+from src.db.init_pstgrsql import get_db, init
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class App:
 
-    _instance = None  # Private class-level instance attribute
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(App, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self, args):
-        self.processor = Processor()
+    def __init__(self, dataSourceDir, dataDestinationDir):
+        self.processor = Processor(dataSourceDir, dataDestinationDir)
         self.api = API()
-        self.config = Config(args)
-        self.db = Database(self.config.get_database_url())
 
-    @classmethod
-    def _get_instance(cls) -> 'App':
-        if cls._instance is None:
-            cls._instance = App()
-        return cls._instance
-    
-    @staticmethod
-    def get_instance():
-        return App.instance
-    
     def runDb(self):
-        return None
+        init()
+        db = get_db()
+
+        return db
 
     def runApi(self):
         self.api.run()
@@ -52,7 +35,7 @@ class App:
 
         #the filesystem should be checked for new availablae data that is not yet in the database
         logging.info("Starting process store in database...")
-        self.processor.add_files(self.config.get_source())
+        self.processor.add_files()
         #self.processor.export_files_summary()
 
         # the whole available database should be checked for any duplicates

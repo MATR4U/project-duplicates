@@ -1,6 +1,9 @@
 # Use the official PostgreSQL image from Docker Hub
 FROM postgres:latest
-
+# Create a user and group with a specific ID. Avoid using root (user ID 0)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Switch to this new user
+USER appuser
 #Update OS
 RUN apt-get update -y
 #RUN apt-get upgrade -y

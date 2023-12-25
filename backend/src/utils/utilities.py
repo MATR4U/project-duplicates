@@ -11,6 +11,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class Utilities:
     """Class provides static utilities functions"""
+
+    @staticmethod
+    def load_config():
+        """Load configuration from config.json."""
+        try:
+            with open('config.json', 'r') as file:
+                return json.load(file)
+        except OSError as e:
+            logging.error("Error loading configuration: %s", e)
+            return {}
     
     @staticmethod
     def extract_year_from_timestamp(timestamp):

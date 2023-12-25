@@ -1,6 +1,11 @@
 # Use the lightweight Alpine Linux as a base image
 FROM alpine:latest
 
+# Create a user and group with a specific ID. Avoid using root (user ID 0)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Switch to this new user
+USER appuser
+
 # Set the working directory
 WORKDIR /data
 
@@ -25,6 +30,10 @@ RUN .venv/bin/python3 -m pip install --no-cache-dir --upgrade pip
 # Install project dependencies (use pip3 to install packages)
 RUN .venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt
 RUN chmod +x *.py
+
+# Healthcheck
+# HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+#  CMD curl -f http://localhost:80/ || exit 1
 
 # Run the Uvicorn server directly
 #CMD ["uvicorn", "app_api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
