@@ -1,11 +1,15 @@
 # src/api/dependencies.py
 from sqlalchemy.orm import Session
-from src.app import App
+from src.db.database import Database
+from sqlalchemy.exc import OperationalError
+from fastapi import HTTPException
 
 def get_database_session() -> Session:
-    db = App.get_instance.get_db()
+    db = Database.get_instance().SESSION
     try:
         yield db
+    except OperationalError:
+        # Handle database connection errors here
+        raise HTTPException(status_code=500, detail="Could not connect to the database.")
     finally:
         db.close()
-

@@ -1,24 +1,28 @@
 # Use the lightweight Alpine Linux as a base image
 FROM alpine:latest
 
+# Update the package repository and install necessary packages
+RUN apk update && \
+    apk add --no-cache build-base python3 py3-pip python3-dev postgresql-dev openblas-dev lapack-dev libffi-dev openssl-dev cairo-dev
+
 # Create a user and group with a specific ID. Avoid using root (user ID 0)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN mkdir -p /app
+RUN chown appuser:appgroup /app
+
 # Switch to this new user
 USER appuser
 
 # Set the working directory
-WORKDIR /data
-
-# Expose the desired port
-EXPOSE 8000
-EXPOSE 5432
+WORKDIR /app
 
 # Copy the application code into the container
-COPY . .
+COPY . /app
 
-# Update the package repository and install necessary packages
-RUN apk update && \
-    apk add --no-cache build-base python3 py3-pip python3-dev postgresql-dev openblas-dev lapack-dev libffi-dev openssl-dev
+# Ensure that Python outputs everything that's printed inside
+# the application rather than buffering it.
+ENV PYTHONUNBUFFERED True
+ENV POSTGRES_PASSWORD: my_password
 
 # Create and activate a virtual environment
 RUN python3 -m venv .venv
@@ -29,7 +33,13 @@ RUN .venv/bin/python3 -m pip install --no-cache-dir --upgrade pip
 
 # Install project dependencies (use pip3 to install packages)
 RUN .venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt
-RUN chmod +x *.py
+
+# RUN chmod +x /app/main.py
+
+
+# Expose the desired port
+EXPOSE 8000
+EXPOSE 5432
 
 # Healthcheck
 # HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \

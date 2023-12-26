@@ -1,8 +1,14 @@
 
 # BUILD DATABASE CONTAINER
-docker build -t "matr/db-postgres:latest" -f Dockerfile .
+
+docker login
+docker build -t "doc1024/matr-db-postgres:latest" -f Dockerfile .
+docker push "doc1024/matr-db-postgres:latest"
 
 <!--
+docker login
+docker build -t "doc1024/matr-db-postgres:latest" -f Dockerfile .
+
 docker run -d --name project-duplicates-postgres project-duplicates-postgres
 docker run -it --rm --link project-duplicates-postgres:postgres-container postgres:latest data /duplicates.db
 psql -h localhost -U myuser -d mydb
@@ -10,8 +16,7 @@ docker run -d --name project-duplicates-postgres -e POSTGRES_DB=mydb -e POSTGRES
  -->
 
 # RUN CONTAINER
-docker ps -all
-docker run -d --name matr-db-postgres matr-db-postgres
+docker run -d --name matr-db-postgres "doc1024/matr-db-postgres:latest"
 docker ps -all
 
 <!--
