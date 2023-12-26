@@ -1,0 +1,7 @@
+.run
+.scripts
+.venv
+.vscode
+.data
+.env
+*db
