@@ -4,7 +4,7 @@
 # docker run -d --cap-add=IPC_LOCK -p 8200:8200 matr-vault
 # docker exec -it vault /bin/sh
 # export VAULT_ADDR='http://127.0.0.1:8200'
-# vault kv put secret/redis password="mypassword"
+# vault kv put secret/redis password=""
 
 brew update upgrade
 brew tap hashicorp/tap
@@ -14,6 +14,3 @@ pip install --upgrade pip
 
 export VAULT_ADDR='http://0.0.0.0:8200'
 vault server -dev
-
-Unseal Key: nX0tjLiwS0CifCmc3Jof4nDXWjFHnHavsq/bvW0pc+w=
-Root Token: hvs.A4TyDtEEhqgE6ttJWSGvzVVM
