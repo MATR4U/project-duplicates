@@ -7,6 +7,8 @@
 *.pyc
 sqlite3
 /backend/data
+*/.idea
+*/.run
 
 # Allowed hidden folder
 !.gitignore
