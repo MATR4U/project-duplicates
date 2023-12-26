@@ -1,41 +1,41 @@
 # Use the lightweight Alpine Linux as a base image
 FROM alpine:latest
 
+ENV APP_ENV=/app
+ENV VENV=$APP_ENV/.venv
+ENV PATH="$VENV/bin:$PATH"
+# Ensure that Python outputs everything that's printed inside
+# the application rather than buffering it.
+ENV PYTHONUNBUFFERED True
+ENV POSTGRES_PASSWORD: my_password
+
 # Update the package repository and install necessary packages
 RUN apk update && \
     apk add --no-cache build-base python3 py3-pip python3-dev postgresql-dev openblas-dev lapack-dev libffi-dev openssl-dev cairo-dev
 
 # Create a user and group with a specific ID. Avoid using root (user ID 0)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-RUN mkdir -p /app
-RUN chown appuser:appgroup /app
+RUN mkdir -p $APP_ENV
+
+# Set the working directory
+WORKDIR $APP_ENV
+
+# Copy application code into the container
+COPY . .
+RUN chown -R appuser:appgroup $APP_ENV
+RUN chmod -R u+rwx .
 
 # Switch to this new user
 USER appuser
 
-# Set the working directory
-WORKDIR /app
-
-# Copy the application code into the container
-COPY . /app
-
-# Ensure that Python outputs everything that's printed inside
-# the application rather than buffering it.
-ENV PYTHONUNBUFFERED True
-ENV POSTGRES_PASSWORD: my_password
-
 # Create and activate a virtual environment
-RUN python3 -m venv .venv
-RUN source .venv/bin/activate
-
+RUN python3 -m venv $VENV
 # Upgrade pip within the virtual environment with --no-cache-dir
-RUN .venv/bin/python3 -m pip install --no-cache-dir --upgrade pip
+RUN python3 -m pip install --no-cache-dir --upgrade pip
+RUN source $VENV/bin/activate
 
 # Install project dependencies (use pip3 to install packages)
-RUN .venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt
-
-# RUN chmod +x /app/main.py
-
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Expose the desired port
 EXPOSE 8000
@@ -47,7 +47,7 @@ EXPOSE 5432
 
 # Run the Uvicorn server directly
 #CMD ["uvicorn", "app_api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-CMD [ ".venv/bin/python3", "main.py" ]
+CMD [ "python3", "main.py" ]
 
 # Run the application and API
 # RUN python3 -m uvicorn app_api:app --reload

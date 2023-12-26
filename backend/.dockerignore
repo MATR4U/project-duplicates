@@ -1,3 +1,9 @@
-// .dockerignore
+.dockerignore
 node_modules
 build
+data
+.vscode
+.venv
+.scripts
+.run
+*.db

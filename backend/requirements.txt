@@ -37,3 +37,6 @@ redis==3.5.3
 
 # hvac is used for interacting with HashiCorp's Vault
 hvac
+
+# Pydantic is a data validation library used to validate data with Python type annotations
+pydantic

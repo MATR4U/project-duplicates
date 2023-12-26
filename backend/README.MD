@@ -3,16 +3,14 @@
 # DOCKER CREATE NETWORK
 docker network create my_network
 
-# CONTAINER BUILD
-docker build -t matr:backend-latest -f Dockerfile .
-
-# docker login
-# docker build -t doc1024/matr:backend-latest -f Dockerfile .
-# docker push doc1024/matr:backend-latest
+# CONTAINER BUILD IMAGE FOR DOCKERHUB
+docker build -t "doc1024/matr:backend-latest" -f Dockerfile .
+docker push "doc1024/matr:backend-latest"
 
 # CONTAINER RUN
-docker pull doc1024/matr:backend-latest
-docker run --network my_network --publish 8000:8000 --publish 80:80 --name matr-backend -d backend-latest
+docker pull "doc1024/matr:backend-latest"
+docker run --network my_network --publish 8000:8000 --publish 80:80 --name matr-backend -d "doc1024/matr:backend-latest"
+docker remove matr-backend && docker run --network my_network --publish 8000:8000 --publish 80:80 --name matr-backend -d "doc1024/matr:backend-latest"
 # docker run --network my_network --publish 8000:8000 --publish 80:80 --name matr-backend -d doc1024/matr:backend-latest
 
 
