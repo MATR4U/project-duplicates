@@ -16,40 +16,18 @@ class App:
         if cls._instance is None:
             cls._args = args
             cls._instance = super(App, cls).__new__(cls)
+            cls._instance._initialize()
         return cls._instance
 
-    def __init__(self, args=None):
+    def _initialize(self, args=None):
         self.processor = Processor()
         self.api = API()
-        self.config = Config(self._args)
-        self.db: Database = Database()
-        self.db.initialize(self.config.get_database_url())
+        self.config = Config()
+        self.db = Database(self.config.get_database_url())
         self._initialized = True
-
-    @classmethod
-    def get_instance(cls) -> 'App':
-        try:
-            if not cls._instance:
-                cls._instance = cls()
-            return cls._instance
-        except Exception as e:
-            logging.error(f"Failed to get instance: {e}")
-            return None
     
     def run_db(self):
-            try:
-                # Get the db instance from the Database class
-                db = Database.get_instance()
-
-                # Use the db instance to execute a query
-                rows = db.execute("SELECT * FROM files")
-
-                # Print the results
-                for row in rows:
-                    print(row)
-
-            except Exception as e:
-                print(f"An error occurred: {e}")
+        self.db.execute("SELECT * FROM health_check")
 
     # TODO Cleanup process
     def run_api(self):

@@ -1,6 +1,5 @@
 import argparse
 import logging
-import time
 from src.app import App
 
 
@@ -18,6 +17,8 @@ def main():
     app = App(args)
 
     app.run_db()
+    app.run_api()
+    
 
     # Keep the application running until the user presses enter
     print("Press enter to exit the app...")

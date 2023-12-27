@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["./data/DataSource", "./data/DataTarget"]
+            "args": ["-b", "postgresql://myuser:mypassword@localhost/mydb"]
         }
     ]
 }

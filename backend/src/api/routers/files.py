@@ -1,13 +1,13 @@
 # src/api/files.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from src.db.models.file import File
+from src.models.file import File
 from src.db.database import Database
 
 router = APIRouter()
 
 def get_database() -> Database:
-    return Database.get_instance()
+    return Database()
 
 def get_database_session() -> Session:
     return get_database().SESSION

@@ -5,7 +5,7 @@ from sqlalchemy.exc import OperationalError
 from fastapi import HTTPException
 
 def get_database_session() -> Session:
-    db = Database.get_instance().SESSION
+    db = Database()
     try:
         yield db
     except OperationalError:
