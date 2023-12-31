@@ -2,12 +2,12 @@ import os
 import shutil
 from datetime import datetime
 import logging
-import json
 import random
 import requests
 from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 class Utilities:
     """Class provides static utilities functions"""

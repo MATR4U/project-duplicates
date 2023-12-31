@@ -18,11 +18,6 @@ def main():
 
     app.run_db()
     app.run_api()
-    
-
-    # Keep the application running until the user presses enter
-    print("Press enter to exit the app...")
-    input()
 
 
 if __name__ == "__main__":

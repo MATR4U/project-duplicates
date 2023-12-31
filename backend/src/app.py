@@ -1,8 +1,8 @@
 import logging
 from src.core.processor import Processor
-from src.api.server import API
-from src.utils.config import Config
-from src.db.database import Database
+from src.api.ApiServer import APIServer
+from src.utils.Config import Config
+from src.database.Base import DatabaseBase
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -21,9 +21,9 @@ class App:
 
     def _initialize(self, args=None):
         self.processor = Processor()
-        self.api = API()
+        self.api = APIServer()
         self.config = Config()
-        self.db = Database(self.config.get_database_url())
+        self.db = DatabaseBase(self.config)
         self._initialized = True
     
     def run_db(self):

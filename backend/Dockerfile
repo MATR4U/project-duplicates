@@ -1,4 +1,4 @@
-# Use the lightweight Alpine Linux as a base image
+# Use the lightweight Alpine Linux as a base.py image
 FROM alpine:latest
 
 ENV APP_ENV=/app
@@ -11,7 +11,7 @@ ENV POSTGRES_PASSWORD: my_password
 
 # Update the package repository and install necessary packages
 RUN apk update && \
-    apk add --no-cache build-base python3 py3-pip python3-dev postgresql-dev openblas-dev lapack-dev libffi-dev openssl-dev cairo-dev
+    apk add --no-cache build-base.py python3 py3-pip python3-dev postgresql-dev openblas-dev lapack-dev libffi-dev openssl-dev cairo-dev
 
 # Create a user and group with a specific ID. Avoid using root (user ID 0)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

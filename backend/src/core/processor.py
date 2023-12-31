@@ -3,9 +3,9 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import shutil
 from tqdm import tqdm
-from src.core.db_operations import DatabaseOperations
+from database.operations.db_operations import DatabaseOperations
 from src.core.file_operations import FileOperations
-from src.utils.utilities import Utilities
+from src.utils.Utilities import Utilities
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

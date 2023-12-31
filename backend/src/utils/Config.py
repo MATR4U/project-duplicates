@@ -6,6 +6,7 @@ import threading
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
+
 class Config:
     _lock = threading.Lock()
     _instance = None  # Class attribute to store the singleton instance
@@ -67,7 +68,9 @@ class Config:
         elif os.environ.get('DB_URL'):
             return os.environ.get('DB_URL')
         else:
-            return cls.get_config_db()
+            cfg = cls.get_config_db()
+            db_url = f"{cfg['db_type']}://{cfg['db_user']}:{cfg['db_password']}@{cfg['db_host']}:{cfg['db_port']}/{cfg['db_name']}"
+            return db_url
     
     @classmethod
     def get_config_api(cls):
@@ -96,16 +99,16 @@ class Config:
         }
 
     @classmethod
-    def get_config_db(self):
-        config = self._load_config(self)
+    def get_config_db(cls):
+        config = cls._load_config(cls)
 
         db_config = config.get('Database', {})
-        db_type = db_config.get('db_type', 'postgresql')
-        db_user = db_config.get('db_user', 'myuser')
-        db_password = db_config.get('db_password', 'mypassword')
-        db_host = db_config.get('db_host', 'localhost')
-        db_port = db_config.get('db_port', '5432')
-        db_name = db_config.get('db_name', 'mydb')
-        db_url = f"{db_type}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-       
-        return db_url
+
+        return {
+            'db_type': db_config.get('db_type', 'postgresql'),
+            'db_user': db_config.get('db_user', 'myuser'),
+            'db_password': db_config.get('db_password', 'mypassword'),
+            'db_host': db_config.get('db_host', 'localhost'),
+            'db_port': db_config.get('db_port', '5432'),
+            'db_name': db_config.get('db_name', 'mydb')
+        }

@@ -1,4 +1,9 @@
 ### MATR BACKEND
+
+SQLModel SAFRS: https://github.com/thomaxxl/safrs?tab=readme-ov-file
+Full Stack: https://github.com/tiangolo/full-stack-fastapi-postgresql
+
+
 ecommerce-backend/
 │
 ├── app/                       # Application Module
