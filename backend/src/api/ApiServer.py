@@ -4,19 +4,17 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from src.utils.Config import Config
-from src.database.Base import DatabaseBase
-
-# TODO cleanup imports
-#from src.db.database import SessionLocal
+from src.common.Config import Config
+from src.database.DatabaseBase import DatabaseBase
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class APIServer:
 
     _instance = None
-    app = None
+    _fastApi = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -26,29 +24,29 @@ class APIServer:
 
     def _initialize(self):
         # Store the FastAPI app as an instance variable
-        self.app = FastAPI()
+        self._fastApi = FastAPI()
 
         # Define an event handler for startup
-        @self.app.on_event("startup")
+        @self._fastApi.on_event("startup")
         async def startup_event():
             print("Starting FastAPI server...")
             # You can print additional server details or setup tasks here
 
         # Define an event handler for shutdown
-        @self.app.on_event("shutdown")
+        @self._fastApi.on_event("shutdown")
         async def shutdown_event():
             print("Shutting down FastAPI server...")
             # You can perform cleanup tasks here
 
         # Sample route
-        @self.app.get("/")
+        @self._fastApi.get("/")
         async def read_root():
             singleton = DatabaseBase()
             results = singleton.execute(str("SELECT * FROM health_check"))
             return {"message": str(results)}
 
         # Exception handler for RequestValidationError
-        @self.app.exception_handler(RequestValidationError)
+        @self._fastApi.exception_handler(RequestValidationError)
         async def validation_exception_handler(request, exc):
             return JSONResponse(
                 status_code=422,
@@ -56,7 +54,7 @@ class APIServer:
             )
 
         # Exception handler for HTTPException
-        @self.app.exception_handler(StarletteHTTPException)
+        @self._fastApi.exception_handler(StarletteHTTPException)
         async def http_exception_handler(request, exc):
             return JSONResponse(
                 status_code=exc.status_code,
@@ -71,7 +69,7 @@ class APIServer:
             
             # TODO , reload=conf['reload']$
             # This argument, if set to True, enables auto-reloading of your FastAPI application when code changes are detected. During development, this is useful to automatically restart the server when you make code modifications. 
-            uvicorn.run(self.app, host=conf['api_host'], port=conf['api_port'], log_level=conf['api_log_level'])
+            uvicorn.run(self._fastApi, host=conf['api_host'], port=conf['api_port'], log_level=conf['api_log_level'])
         except Exception as e:
             """
             Log any exceptions that occur while running the fastapi server

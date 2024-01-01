@@ -10,8 +10,19 @@ ENV PYTHONUNBUFFERED True
 ENV POSTGRES_PASSWORD: my_password
 
 # Update the package repository and install necessary packages
-RUN apk update && \
-    apk add --no-cache build-base.py python3 py3-pip python3-dev postgresql-dev openblas-dev lapack-dev libffi-dev openssl-dev cairo-dev
+RUN apk update
+RUN apk upgrade
+RUN apk add --no-cache curl
+RUN apk add --no-cache build-base
+RUN apk add --no-cache python3
+RUN apk add --no-cache py3-pip
+RUN apk add --no-cache python3-dev
+RUN apk add --no-cache postgresql-dev
+RUN apk add --no-cache openblas-dev
+RUN apk add --no-cache lapack-dev
+RUN apk add --no-cache libffi-dev
+RUN apk add --no-cache openssl-dev
+RUN apk add --no-cache cairo-dev
 
 # Create a user and group with a specific ID. Avoid using root (user ID 0)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -42,8 +53,8 @@ EXPOSE 8000
 EXPOSE 5432
 
 # Healthcheck
-# HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-#  CMD curl -f http://localhost:80/ || exit 1
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+CMD curl -f http://localhost:80/ || exit 1
 
 # Run the Uvicorn server directly
 #CMD ["uvicorn", "app_api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

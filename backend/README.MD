@@ -45,12 +45,12 @@ ecommerce-backend/
 ├── requirements.txt           # Python Dependencies
 └── .env                       # Environment Variables
 
-# DOCKER CREATE NETWORK
-docker network create my_network
-
 # CONTAINER BUILD IMAGE FOR DOCKERHUB
 docker build -t "doc1024/matr:backend-latest" -f Dockerfile .
 docker push "doc1024/matr:backend-latest"
+
+# DOCKER CREATE NETWORK
+docker network create my_network
 
 # CONTAINER RUN
 docker pull "doc1024/matr:backend-latest"

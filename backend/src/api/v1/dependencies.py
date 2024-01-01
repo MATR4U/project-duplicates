@@ -1,6 +1,6 @@
 # src/api/dependencies.py
 from sqlalchemy.orm import Session
-from src.database.database import DatabaseBase
+from src.database.DatabaseBase import DatabaseBase
 from sqlalchemy.exc import OperationalError
 from fastapi import HTTPException
 

@@ -33,3 +33,5 @@ hvac
 pydantic
 
 sqlmodel
+
+watchdog

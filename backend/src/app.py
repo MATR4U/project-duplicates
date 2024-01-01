@@ -1,8 +1,8 @@
 import logging
 from src.core.processor import Processor
 from src.api.ApiServer import APIServer
-from src.utils.Config import Config
-from src.database.Base import DatabaseBase
+from src.common.Config import Config
+from src.database.Postgresql import Postgresql
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -23,7 +23,7 @@ class App:
         self.processor = Processor()
         self.api = APIServer()
         self.config = Config()
-        self.db = DatabaseBase(self.config)
+        self.db = Postgresql(self.config)
         self._initialized = True
     
     def run_db(self):

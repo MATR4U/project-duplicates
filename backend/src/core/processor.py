@@ -5,7 +5,7 @@ import shutil
 from tqdm import tqdm
 from database.operations.db_operations import DatabaseOperations
 from src.core.file_operations import FileOperations
-from src.utils.Utilities import Utilities
+from src.common.Utilities import Utilities
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
