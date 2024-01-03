@@ -1,6 +1,6 @@
 import argparse
 import logging
-from src.app import App
+from src.App import App
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
     parser.add_argument("-s", "--source", type=str, help="Path to the source to search.")
     parser.add_argument("-d", "--destination", type=str, help="Path to the destination folder.")
     parser.add_argument("-b", '--db-url', type=str, help='Database URL (e.g., "postgresql://myuser:mypassword@localhost/mydb")')
-    parser.add_argument("-c", "--config", type=argparse.FileType('r'), help="Path to the configuration file.", default="config.json")
+    parser.add_argument("-c", "--config", type=str, help="Path to the configuration file.", default="config.json")
 
     args = parser.parse_args()
     app = App(args)

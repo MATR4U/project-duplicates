@@ -1,6 +1,6 @@
 from api.v1.endpoints.Base import EndpointsBase  # Import your CRUDBase class
 from src.database.models.item import Item  # Import your SQLModel Item class
-from src.api.v1.schemas.SchemaItem import ItemCreate, ItemUpdate  # Import your Pydantic schemas
+from src.api.v1.schemas.Item import ItemCreate, ItemUpdate  # Import your Pydantic schemas
 from typing import Type
 
 

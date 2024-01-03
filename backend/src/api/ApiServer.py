@@ -5,56 +5,62 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from src.common.Config import Config
-from src.database.DatabaseBase import DatabaseBase
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class APIServer:
-
     _instance = None
-    _fastApi = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(APIServer, cls).__new__(cls)
-            cls._instance._initialize()
         return cls._instance
 
-    def _initialize(self):
-        # Store the FastAPI app as an instance variable
-        self._fastApi = FastAPI()
+    def __init__(self):
+        if hasattr(self, 'initialized') and self.initialized:
+            logging.info("APIServer instance already initialized.")
+            return
 
-        # Define an event handler for startup
-        @self._fastApi.on_event("startup")
+        try:
+            logging.info("Initializing APIServer instance.")
+            self.fast_api = FastAPI()
+            self._setup_event_handlers()
+            self._setup_routes()
+            self._setup_exception_handlers()
+            self.initialized = True
+            logging.info("APIServer instance successfully initialized.")
+        except Exception as e:
+            logging.error(f"Error occurred during APIServer initialization: {e}", exc_info=True)
+            raise
+
+    def _setup_event_handlers(self):
+        @self.fast_api.on_event("startup")
         async def startup_event():
-            print("Starting FastAPI server...")
-            # You can print additional server details or setup tasks here
+            logging.info("Starting FastAPI server...")
 
-        # Define an event handler for shutdown
-        @self._fastApi.on_event("shutdown")
+        @self.fast_api.on_event("shutdown")
         async def shutdown_event():
-            print("Shutting down FastAPI server...")
-            # You can perform cleanup tasks here
+            logging.info("Shutting down FastAPI server...")
 
-        # Sample route
-        @self._fastApi.get("/")
+    def _setup_routes(self):
+        @self.fast_api.get("/")
         async def read_root():
-            singleton = DatabaseBase()
-            results = singleton.execute(str("SELECT * FROM health_check"))
-            return {"message": str(results)}
+            # Example database operation
+            # singleton = DatabaseBase()
+            # results = "" # singleton.execute("SELECT * FROM health_check")
+            return {"message": str("")} # results)}
 
-        # Exception handler for RequestValidationError
-        @self._fastApi.exception_handler(RequestValidationError)
+    def _setup_exception_handlers(self):
+        @self.fast_api.exception_handler(RequestValidationError)
         async def validation_exception_handler(request, exc):
             return JSONResponse(
                 status_code=422,
                 content={"error": "Validation Error", "detail": exc.errors()},
             )
 
-        # Exception handler for HTTPException
-        @self._fastApi.exception_handler(StarletteHTTPException)
+        @self.fast_api.exception_handler(StarletteHTTPException)
         async def http_exception_handler(request, exc):
             return JSONResponse(
                 status_code=exc.status_code,
@@ -63,15 +69,9 @@ class APIServer:
 
     def run(self):
         try:
-            # Create an instance of Config (the singleton)
-            conf = Config().get_config_api()
-            #logging.info(f"Running server on {conf['host']}:{conf['port']} with log level {conf['log_level']}...")
-            
-            # TODO , reload=conf['reload']$
-            # This argument, if set to True, enables auto-reloading of your FastAPI application when code changes are detected. During development, this is useful to automatically restart the server when you make code modifications. 
-            uvicorn.run(self._fastApi, host=conf['api_host'], port=conf['api_port'], log_level=conf['api_log_level'])
+            config = Config()
+            conf = config.get_config_api()
+
+            uvicorn.run(self.fast_api, host=conf['api_host'], port=conf['api_port'], log_level=conf['api_log_level'])
         except Exception as e:
-            """
-            Log any exceptions that occur while running the fastapi server
-            """
             logging.error(f"An error occurred while running the fastapi server: {e}")

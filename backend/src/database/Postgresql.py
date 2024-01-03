@@ -4,6 +4,7 @@ from src.common.Config import Config
 
 
 class Postgresql(DatabaseBase):
+    def _initialize(self, config: Config):
+        # PostgreSQL-specific initialization, if necessary
+        super()._initialize(config)  # Ensure base initialization is also called
 
-    def __init__(self, config: Config):
-        super().__init__(config)

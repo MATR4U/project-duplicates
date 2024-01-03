@@ -12,7 +12,7 @@ class App:
     _initialized = False
     _args = None
 
-    def __new__(cls, args=None):
+    def __new__(cls, args=None, **kwargs):
         if cls._instance is None:
             cls._args = args
             cls._instance = super(App, cls).__new__(cls)
@@ -20,14 +20,18 @@ class App:
         return cls._instance
 
     def _initialize(self, args=None):
+        if args:
+            self._args = args
         self.processor = Processor()
         self.api = APIServer()
-        self.config = Config()
+        self.config = Config(self._args)
         self.db = Postgresql(self.config)
         self._initialized = True
     
     def run_db(self):
-        self.db.execute("SELECT * FROM health_check")
+        pass
+        # TODO refactor health check
+        # self.db.execute("SELECT * FROM health_check")
 
     # TODO Cleanup process
     def run_api(self):

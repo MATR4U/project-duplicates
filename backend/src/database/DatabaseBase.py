@@ -1,8 +1,7 @@
-from typing import Optional, List, Tuple, Any, Sequence
+from typing import Optional, Any, Sequence
 import logging
-from sqlalchemy import Connection, Engine, text, Row
-from sqlalchemy.engine import TupleResult
-from sqlalchemy.exc import OperationalError, ProgrammingError, IntegrityError
+from sqlalchemy import Engine, text
+from sqlalchemy.exc import OperationalError, ProgrammingError, IntegrityError, SQLAlchemyError
 from sqlmodel import SQLModel, create_engine, Session
 from src.common.Config import Config
 
@@ -16,8 +15,8 @@ class DatabaseBase:
     """
     _instance: Optional['DatabaseBase'] = None  # Private class-level instance attribute
     _initialized = False
-    db_url: str = None
-    engine: Engine = None
+    _db_url: str = None
+    _engine: Engine = None
 
     def __new__(cls, config: Optional[Config] = None, *args, **kwargs):
         """
@@ -29,36 +28,63 @@ class DatabaseBase:
                 raise ValueError("A valid config is required for the first instantiation")
 
             cls._instance = super(DatabaseBase, cls).__new__(cls)
-            cls._instance._initialize(config)
 
         return cls._instance
 
-    def _initialize(self, config: Config):
+    def __init__(self, config):
+        if self._initialized:
+            return
+
+        if config is None:
+            logging.error("Database initialization failed: No configuration provided.")
+            raise ValueError("Database configuration is required.")
+
         try:
-            if not self._initialized:
-                self.db_url = config.get_database_url()
-                self.engine: Engine = self._create_engine(self.db_url)
-                self._create_database(self._get_session(), config.get_config_db()['db_name'])
-                self.create_tables(self.engine)
-                self._initialized = True
-                self._instance = self  # ToDo check why needed < __new__ exists >
+            self._db_url = config.get_database_url()
+            self._engine: Engine = self._create_engine(self._db_url)
+            with self._get_session() as session:
+                self._create_database(session, config.get_config_db()['db_name'])
+                self._create_tables(self._engine)
+            self._initialized = True
+            logging.info("Database successfully initialized.")
         except OperationalError as oe:
-            logging.error(f"Failed to connect to the database: {oe}")
+            logging.error(f"Operational error during database initialization: {oe}")
+            raise  # Consider how to handle this in your application context
+        except SQLAlchemyError as e:
+            logging.error(f"SQLAlchemy error during database initialization: {e}")
+            raise
         except Exception as e:
-            logging.error(f"Failed to initialize the database: {e}")
+            logging.error(f"Unexpected error during database initialization: {e}")
+            raise
 
     def _create_engine(self, db_url) -> Engine:
         """
-        Creates a new SQLAlchemy engine.
+        Creates a new SQLAlchemy engine with enhanced error handling
+        and optional configuration settings.
         """
         logging.info("Creating engine...")
-        engine = create_engine(db_url)
-        SQLModel.metadata.create_all(engine)
 
-        return engine
+        # Optional: Engine configuration settings
+        engine_options = {
+            "echo": False,  # Set to True to log all SQL statements (useful for debugging)
+            "pool_pre_ping": True,  # Check for broken connections before checkout
+            "pool_recycle": 3600,  # Time to recycle connections
+            "pool_timeout": 30,    # Timeout for getting connections from the pool
+            # Additional options can be added here as needed
+        }
 
-    def _get_session(self):
-        return Session(self.engine)
+        try:
+            engine = create_engine(db_url, **engine_options)
+            return engine
+        except SQLAlchemyError as e:
+            logging.error(f"Error creating SQLAlchemy engine: {e}")
+            raise  # Re-raise the exception or handle it as needed
+
+    def _get_session(self) -> Session:
+        """Create and return a new session."""
+        if not self._engine:
+            raise Exception("Database engine is not initialized.")
+        return Session(self._engine)
 
     def _create_database(self, session: Session, db_name):
         """
@@ -70,15 +96,15 @@ class DatabaseBase:
             t = text(f"CREATE DATABASE IF NOT EXISTS {db_name}")
             session.execute(t)
         except ProgrammingError:
-            logging.warning(f"Database '{self.db_url}' already exists, no need to create it.")
+            logging.warning(f"Database '{self._db_url}' already exists, no need to create it.")
         except OperationalError:
-            logging.error(f"Failed to connect to the database '{self.db_url}'.")
+            logging.error(f"Failed to connect to the database '{self._db_url}'.")
         except IntegrityError:
-            logging.error(f"Failed to create the database '{self.db_url}' due to a constraint violation.")
+            logging.error(f"Failed to create the database '{self._db_url}' due to a constraint violation.")
         except Exception as e:
-            logging.error(f"An unexpected error occurred while creating the database '{self.db_url}': {e}")
+            logging.error(f"An unexpected error occurred while creating the database '{self._db_url}': {e}")
 
-    def create_tables(self, engine):
+    def _create_tables(self, engine):
         # TODO
         # Make sure all your SQLModel models are imported before this step
         # For example:
@@ -86,7 +112,7 @@ class DatabaseBase:
         from src.database.models.item import Item
         SQLModel.metadata.create_all(engine)
 
-    def execute(self, query: str) -> Sequence[Row[tuple[Any, ...] | Any]]:
+    def execute(self, query: str) -> Sequence[Any]:
         """
         Execute a SQL query and return the results.
         """

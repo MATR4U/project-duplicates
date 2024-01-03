@@ -8,6 +8,14 @@ ModelType = TypeVar("ModelType", bound=SQLModel)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
+###
+# When to Implement Specific CRUD Methods:
+# You would only need to implement or override specific CRUD methods in the following scenarios:
+# Custom Business Logic: If a particular model requires custom business logic during CRUD operations that are not covered by the generic methods.
+# Additional Validations: If you need to perform additional validations or processing on the data before saving or updating it in the database.
+# Complex Queries: If your read operations involve complex queries that are not just simple retrievals based on the primary key.
+# Special Handling: If there are specific actions that need to be taken when deleting or updating records, such as cascading deletes or updating related records.
+###
 
 class EndpointsBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):

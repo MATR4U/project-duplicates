@@ -6,78 +6,115 @@ from common.ConfigFileHandler import ConfigFileHandler
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
 
+# ToDo Implement ConfigFileHandler
 class Config:
+
+    # TODO refactor into static config
+    OSENV_DBURL= 'MATR_DB_URL'
+    OSENV_SOURCE = 'MATR_SOURCE'
+    OSENV_DESTINATION = 'MATR_DESTINATION'
+
     _lock = threading.Lock()
     _instance = None  # Class attribute to store the singleton instance
+    _args = None
+    _config_file = None
     _initialized = False
 
-    args = None
-    observer = None
-    configFileHandler = None
-
-#ToDo Implement ConfigFileHandler
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, args=None):
         with cls._lock:
             if not cls._instance:
-                cls._instance = super(Config, cls).__new__(cls)
+                cls._instance = super().__new__(cls)
+                cls._instance._args = args
+
         return cls._instance
 
-    def __init__(self, config_path=None):
-        if not hasattr(self, '_initialized'):
-            self.configFileHandler = ConfigFileHandler(config_path)
+    def __init__(self, args=None):
+        if not self._initialized:
+            self._config_file = ConfigFileHandler(self._args)  # Set the command-line arguments
             self._initialized = True
 
     def get_source(self):
-        if self.args:
-            return self.args.source
+        if self._args:
+            return self._args.source
         elif os.environ:
-            return os.environ.get('SOURCE')
-        elif self.args.config:
-            return self._load_config(self.args.config).get('source')
+            return os.environ.get(self.OSENV_SOURCE)
+        elif self._args.config:
+            return self._config_file.get_config().get('source')
         else:
             return ""
     
     def get_destination(self):
-        if self.args:
-            return self.args.destination
+        if self._args:
+            return self._args.destination
         elif os.environ:
-            return os.environ.get('DESTINATION')
-        elif self.args.config:
-            return self._load_config(self.args.config).get('destination')
+            return os.environ.get(self.OSENV_DESTINATION)
+        elif self._args.config:
+            return self._config_file.get_config().get('destination')
         else:
             return ""
 
-    def get_database_url(cls):
-        # Check command line arguments, then environment variable, then config file
-        if cls.args and cls.args.db_url:
-            return cls.args.db_url
-        elif os.environ.get('DB_URL'):
-            return os.environ.get('DB_URL')
-        else:
-            cfg = cls.get_config_db()
-            db_url = f"{cfg['db_type']}://{cfg['db_user']}:{cfg['db_password']}@{cfg['db_host']}:{cfg['db_port']}/{cfg['db_name']}"
-            return db_url
+    def get_database_url(self):
+        """
+        Get the database URL from command line arguments, environment variable,
+        or configuration file, in that order of precedence.
+        """
+        try:
+            # Check command line arguments
+            if self._args and self._args.db_url:
+                logging.info("Getting database URL from command line arguments.")
+                return self._args.db_url
+
+            # Check environment variable
+            db_url_env = os.environ.get(self.OSENV_DBURL)
+            if db_url_env:
+                logging.info("Getting database URL from environment variable.")
+                return db_url_env
+
+            # Fallback to configuration file
+            cfg = self.get_config_db()
+            if cfg and all(key in cfg for key in ['db_type', 'db_user', 'db_password', 'db_host', 'db_port', 'db_name']):
+                logging.info("Getting database URL from configuration file.")
+                db_url = f"{cfg['db_type']}://{cfg['db_user']}:{cfg['db_password']}@{cfg['db_host']}:{cfg['db_port']}/{cfg['db_name']}"
+                return db_url
+            else:
+                raise ValueError("Database configuration is incomplete or missing.")
+
+        except Exception as e:
+            # Log and re-raise the exception for higher-level handling
+            logging.error(f"Error in getting database URL: {e}")
+            raise
     
-    @classmethod
-    def get_config_api(cls):
-        # Check command line arguments, then environment variable, then config file
+    def get_config_api(self):
+        """
+        Get the API configuration from command line arguments or configuration file.
+        """
+        # Retrieve the whole configuration dictionary safely
+        config = self._config_file.get_config() if self._config_file else {}
+        api_config = config.get('API', {})
 
-        config = cls._load_config(cls)
-
-        if cls.args and cls.args.api_host:
-            api_host = cls.args.api_host
+        # API Host
+        api_host = getattr(self._args, 'api_host', None)
+        if api_host:
+            logging.info("API host set from command line arguments.")
         else:
-            api_host = config.get('API', {}).get('api_host', '0.0.0.0')
+            api_host = api_config.get('api_host', '0.0.0.0')
+            logging.info("API host set from configuration file.")
 
-        if cls.args and cls.args.api_port:
-            api_port = cls.args.api_port
+        # API Port
+        api_port = getattr(self._args, 'api_port', None)
+        if api_port:
+            logging.info("API port set from command line arguments.")
         else:
-            api_port = config.get('API', {}).get('api_port', '8000')
+            api_port = api_config.get('api_port', '8000')
+            logging.info("API port set from configuration file.")
 
-        if cls.args and cls.args.api_log_level:
-            api_log_level = cls.args.api_log_level
+        # API Log Level
+        api_log_level = getattr(self._args, 'api_log_level', None)
+        if api_log_level:
+            logging.info("API log level set from command line arguments.")
         else:
-            api_log_level = config.get('API', {}).get('api_log_level', 'info')
+            api_log_level = api_config.get('api_log_level', 'info')
+            logging.info("API log level set from configuration file.")
 
         return {
             'api_host': api_host,
@@ -85,17 +122,34 @@ class Config:
             'api_log_level': api_log_level
         }
 
-    @classmethod
-    def get_config_db(cls):
-        config = cls._load_config(cls)
+    def get_config_db(self):
+        """
+        Retrieve database configuration from the loaded configuration file.
+        Returns default values if specific configuration settings are not found.
+        """
+        try:
+            db_config = self._config_file.get_config().get('Database', {})
 
-        db_config = config.get('Database', {})
+            # Dictionary to store the final configuration
+            final_config = {
+                'db_type': db_config.get('db_type', 'postgresql'),
+                'db_user': db_config.get('db_user', 'myuser'),
+                'db_password': db_config.get('db_password', 'mypassword'),
+                'db_host': db_config.get('db_host', 'localhost'),
+                'db_port': db_config.get('db_port', '5432'),
+                'db_name': db_config.get('db_name', 'mydb')
+            }
 
-        return {
-            'db_type': db_config.get('db_type', 'postgresql'),
-            'db_user': db_config.get('db_user', 'myuser'),
-            'db_password': db_config.get('db_password', 'mypassword'),
-            'db_host': db_config.get('db_host', 'localhost'),
-            'db_port': db_config.get('db_port', '5432'),
-            'db_name': db_config.get('db_name', 'mydb')
-        }
+            # Log warnings for any default values used
+            for key, value in final_config.items():
+                if key in db_config and db_config[key] is None:
+                    logging.warning(f"Database configuration for '{key}' is missing; using default: '{value}'")
+                elif key not in db_config:
+                    logging.warning(f"Database configuration for '{key}' not found; using default: '{value}'")
+
+            return final_config
+
+        except Exception as e:
+            logging.error(f"Error retrieving database configuration: {e}")
+            # Optionally, re-raise the exception or return a default configuration
+            raise  # or return {}
