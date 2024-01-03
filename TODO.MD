@@ -9,6 +9,7 @@ Feature - Solution
 
 Refactoring
 [90%] Implement Dynamic Handling of Configuration File changes.
+[100%] configuration validation using pydantic model
 [] Implement Dynamic Handling of DB connections
 [] Implement Config File Handler
 [] Implement Thread safety in common classes
