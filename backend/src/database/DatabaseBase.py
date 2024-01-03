@@ -110,6 +110,7 @@ class DatabaseBase:
         # For example:
         from src.database.models.ecommerce import User, Product, Order, OrderItem
         from src.database.models.item import Item
+        from src.database.models.health import Health
         SQLModel.metadata.create_all(engine)
 
     def execute(self, query: str) -> Sequence[Any]:

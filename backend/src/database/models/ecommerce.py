@@ -2,6 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime
 from typing import List, Optional
 
+
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(nullable=False, unique=True)
@@ -14,6 +15,7 @@ class User(SQLModel, table=True):
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}', created_at='{self.created_at}')>"
 
+
 class Product(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(nullable=False)
@@ -24,6 +26,7 @@ class Product(SQLModel, table=True):
 
     order_items: List["OrderItem"] = Relationship(back_populates="product")
 
+
 class Order(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(nullable=False, foreign_key="user.id")
@@ -32,6 +35,7 @@ class Order(SQLModel, table=True):
 
     user: User = Relationship(back_populates="orders")
     items: List["OrderItem"] = Relationship(back_populates="order")
+
 
 class OrderItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

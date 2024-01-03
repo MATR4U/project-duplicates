@@ -24,4 +24,3 @@ class AppConfig(BaseModel):
     api_token: str
     Database: DatabaseConfig
     API: APIConfig
-    Test: dict  # Use a more specific model if the structure of Test is known
