@@ -10,57 +10,58 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class App:
     _instance = None  # Private class-level instance attribute
     _initialized = False
+
     _args = None
+    _config = None
+    _processor = None
+    _api = None
+    _db = None
 
     def __new__(cls, args=None, **kwargs):
         if cls._instance is None:
-            cls._args = args
             cls._instance = super(App, cls).__new__(cls)
-            cls._instance._initialize()
+            cls._instance._args = args
         return cls._instance
 
-    def _initialize(self, args=None):
-        if args:
-            self._args = args
-        self.processor = Processor()
-        self.api = APIServer()
-        self.config = Config(self._args)
-        self.db = Postgresql(self.config)
-        self._initialized = True
-    
-    def run_db(self):
-        pass
-        # TODO refactor health check
-        # self.db.execute("SELECT * FROM health_check")
+    def __init__(self, args=None):
+        # Prevent re-initialization
+        if self._initialized:
+            return
 
-    # TODO Cleanup process
+        # Singleton initialization logic here
+        self._args = args
+        self._config = Config(args)
+        self._initialized = True
+
+    def processor(self):
+        if self._processor is None:
+            self._processor = Processor()
+        return self._processor
+
+    def api(self):
+        if self._api is None:
+            self._api = APIServer()
+        return self._api
+
+    def config(self):
+        if self._config is None:
+            self._config = Config(self._args)
+        return self._config
+
+    def db(self):
+        if self._db is None:
+            self._db = Postgresql(self.config())
+        return self._db
+
+    def run_db(self):
+        # Example usage of db
+        # TODO: Refactor health check
+        # result = self.db.execute("SELECT * FROM health_check")
+        pass
+
     def run_api(self):
-        self.api.run()
+        self.api().run(self._config.get_config())
 
     def run_cli(self):
-        # TODO Cleanup process should stage the change into a new delete schema, movement of the files should be acknowledged.
-        # csv file is exported including the to be deleted data
-        # patterns = ['.@__thumb', '.thumbnails', '@eaDir', '.picasa.ini']
-        # Utilities.process_items_with_pattern(dataSourceDir, patterns, dataDestinationDir, True)
-        # self.processor.export_pattern_summary()
-
-        # TODO if data is already in the database, first should be checked which of the data is still available
-        # if data is not available mark is_deleted
-        # if data is_deleted marked it should be removed from the duplication schema
-
-        # the filesystem should be checked for new available data that is not yet in the database
-        logging.info("Starting process store in database...")
-        self.processor.add_files(self.config.get_source())
-        # self.processor.export_files_summary()
-
-        # the whole available database should be checked for any duplicates
-        # duplicates should be added
-        logging.info("Starting process find and mark duplicates...")
-        self.processor.add_duplicates()
-        # self.processor.export_duplicates_summary()
-                
-        # Wait for user confirmation to move duplicates
-        # user_input = input("Do you want to move the duplicates to the target directory? (yes/no): ")
-        # if user_input.lower() == "yes":
-        #     self.processor.move_duplicates()
-        logging.info("Duplicate processing completed.")
+        # TODO: Implement CLI logic
+        pass

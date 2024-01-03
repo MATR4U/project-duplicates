@@ -83,7 +83,21 @@ class Config:
             # Log and re-raise the exception for higher-level handling
             logging.error(f"Error in getting database URL: {e}")
             raise
-    
+
+    def get_config(self):
+        """
+        Retrieve database configuration from the loaded configuration file.
+        Returns default values if specific configuration settings are not found.
+        """
+        try:
+            config = self._config_file.get_config()
+            return config
+
+        except Exception as e:
+            logging.error(f"Error retrieving configuration: {e}")
+            # Optionally, re-raise the exception or return a default configuration
+            raise  # or return {}
+
     def get_config_api(self):
         """
         Get the API configuration from command line arguments or configuration file.

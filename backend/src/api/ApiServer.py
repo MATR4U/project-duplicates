@@ -4,6 +4,9 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from typing import Dict
+
+from core.ConfigurationModel import AppConfig
 from src.common.Config import Config
 
 # Set up logging
@@ -67,11 +70,13 @@ class APIServer:
                 content={"error": "HTTP Exception", "detail": exc.detail},
             )
 
-    def run(self):
+    def run(self, config_json: Dict):
+        config = AppConfig(**config_json)
         try:
-            config = Config()
-            conf = config.get_config_api()
 
-            uvicorn.run(self.fast_api, host=conf['api_host'], port=conf['api_port'], log_level=conf['api_log_level'])
+            uvicorn.run(self.fast_api,
+                        host=config.API.api_host,
+                        port=config.API.api_port,
+                        log_level=config.API.api_log_level)
         except Exception as e:
             logging.error(f"An error occurred while running the fastapi server: {e}")

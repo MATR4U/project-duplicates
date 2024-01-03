@@ -77,9 +77,7 @@ class ConfigFileHandler(FileSystemEventHandler):
         Start the Watchdog observer to monitor configuration file changes.
         """
         # Convert to absolute path if it's not already
-        abs_config_file_path = os.path.abspath(self._config_file_path)
-
-        dirname = os.path.dirname(abs_config_file_path) or '.'
+        dirname = os.path.abspath(self._config_file_path) or '.'
         if not os.path.exists(dirname):
             logging.error(f"Directory for config file does not exist: {dirname}")
             return
