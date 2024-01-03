@@ -7,7 +7,7 @@
 - **📌 Task**: General tasks or activities that need to be completed.
 
 ## 📝 ToDo
-- [ ] Implement Authentication throughout the app architecture (using vault as key store)
+- [ ] ...
 
 ## 🚧 In Progress
 - [ ] ...

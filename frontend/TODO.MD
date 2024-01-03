@@ -7,7 +7,7 @@
 - **📌 Task**: General tasks or activities that need to be completed.
 
 ## 📝 ToDo
-- [ ] Implement Authentication throughout the app architecture (using vault as key store)
+- [ ] ...
 
 ## 🚧 In Progress
 - [ ] ...
@@ -16,4 +16,5 @@
 - [ ] ...
 
 ## 🔙 Backlog
-- [ ] ...
+- [ ] Authentication with Nodejs and JWTs - a simple example ([Example]([https://jsramblings.com/authentication-with-node-and-jwt-a-simple-example/])
+- [ ] Dockerizing react app ([link](https://jsramblings.com/dockerizing-a-react-app/))
