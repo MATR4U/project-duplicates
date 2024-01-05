@@ -3,6 +3,19 @@
 SQLModel SAFRS: https://github.com/thomaxxl/safrs?tab=readme-ov-file
 Full Stack: https://github.com/tiangolo/full-stack-fastapi-postgresql
 
+# PYTHON INSTALL
+python -m venv .venv
+(mac: source) .\.venv\Scripts\activate 
+python -m pip install --upgrade pip
+
+# APP DEPENDENCIES INSTALL
+pip install -r requirements.txt
+
+# RUN BACKEND
+python main.py -b "postgresql://myuser:mypassword@0.0.0.0/mydb"
+
+# RUN BACKEND-API
+python -m uvicorn app_api:app --reload
 
 ecommerce-backend/
 │
@@ -64,11 +77,3 @@ docker remove -f matr-backend
 docker ps -all
 docker exec -it matr-backend /bin/bash
 
-# APP INSTALL
-pip install -r requirements.txt
-
-# RUN BACKEND
-python main.py ./test/data/DataSource ./test/data/DataTarget
-
-# RUN BACKEND-API
-python -m uvicorn app_api:app --reload

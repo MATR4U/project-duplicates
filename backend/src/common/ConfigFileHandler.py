@@ -65,6 +65,20 @@ class ConfigFileHandler(FileSystemEventHandler):
 
             return {}
 
+    def _calculate_file_hash(self):
+        """
+        Calculate the MD5 hash of a file's contents.
+        """
+        hash_md5 = hashlib.md5()
+        try:
+            with open(self._config_file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_md5.update(chunk)
+            return hash_md5.hexdigest()
+        except IOError as e:
+            logging.error(f"Error reading file for hashing: {e}")
+            return None
+
     def _reload_config(self):
         """
         Reload the configuration file.
@@ -96,20 +110,6 @@ class ConfigFileHandler(FileSystemEventHandler):
             self._observer.stop()
             self._observer.join()
             self._observer = None
-
-    def _calculate_file_hash(self):
-        """
-        Calculate the MD5 hash of a file's contents.
-        """
-        hash_md5 = hashlib.md5()
-        try:
-            with open(self._config_file_path, "rb") as f:
-                for chunk in iter(lambda: f.read(4096), b""):
-                    hash_md5.update(chunk)
-            return hash_md5.hexdigest()
-        except IOError as e:
-            logging.error(f"Error reading file for hashing: {e}")
-            return None
 
     def on_modified(self, event):
         """
