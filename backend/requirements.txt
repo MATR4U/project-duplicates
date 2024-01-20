@@ -17,7 +17,7 @@ SQLAlchemy
 sqlalchemy-utils
 
 # PostgreSQL adapter (commented out)
-psycopg2
+#psycopg2
 psycopg2-binary
 
 #It provides a simple and intuitive API for sending HTTP requests, handling responses, and managing various aspects of web communication. 
