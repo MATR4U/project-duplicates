@@ -1,3 +1,8 @@
+# PYTHON INSTALL
+python -m venv .venv
+(mac: source) .\.venv\Scripts\activate 
+python -m pip install --upgrade pip
+
 # DOCKER CREATE NETWORK
 docker network create my_network
 
