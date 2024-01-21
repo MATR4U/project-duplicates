@@ -4,8 +4,8 @@ import json
 from database.operations.db_operations_files import DatabaseOperationsFiles
 from database.operations.db_operations_duplicates import DatabaseOperationsDuplicates
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 class DatabaseOperations:
     """Class provides all database operations"""
@@ -63,7 +63,7 @@ class DatabaseOperations:
         """
 
         return self.db_operations_files.get_existing_paths(self.conn.cursor())
-    
+
     def fetch_all_files(self):
         """
         Retrieves all file records from the 'files' table in the database.
@@ -106,7 +106,7 @@ class DatabaseOperations:
 
         self.db_operations_files.mark_as_deleted(self.conn.cursor(), id)
         self.db_operations_duplicates.remove_marked_deleted(self.conn.cursor(), id)
-                
+
     def fetch_files_and_duplicate_json(self):
         """
         Fetches original files that are not marked as deleted and their associated duplicates
@@ -115,7 +115,7 @@ class DatabaseOperations:
         Returns:
             list of tuples: Each tuple contains the original file ID, path, and a JSON string of duplicate IDs.
         """
-        
+
         all_files = []
 
         try:
@@ -130,12 +130,12 @@ class DatabaseOperations:
                 all_files = cur.fetchall()
 
         except sqlite3.Error as e:
-            logging.error("An error occurred: %s",e)
+            logging.error("An error occurred: %s", e)
             # Depending on your application's requirements, you might want to re-raise the exception
             raise
 
         return all_files
-    
+
     def get_files_and_duplicates(self):
         """
         Fetches and organizes a summary of the original files and their duplicates.
@@ -151,7 +151,8 @@ class DatabaseOperations:
             originals_and_duplicates = {}
 
             # Collect all duplicate IDs
-            all_duplicate_ids = [dup_id for _, _, duplicate_ids_json in originals for dup_id in json.loads(duplicate_ids_json)]
+            all_duplicate_ids = [dup_id for _, _, duplicate_ids_json in originals for dup_id in
+                                 json.loads(duplicate_ids_json)]
 
             if all_duplicate_ids:
                 # Fetch all paths for duplicate IDs in a single query
@@ -185,7 +186,7 @@ class DatabaseOperations:
         Args:
             duplicate_id (int): The ID of the duplicate file to be removed.
         """
-        
+
         try:
             with self.conn:
                 cur = self.conn.cursor()
@@ -195,7 +196,9 @@ class DatabaseOperations:
                 result = cur.fetchone()
                 if result and result[0] == 1:  # File is marked as deleted
                     # Update the duplicates table only for entries that contain this duplicate ID
-                    cur.execute("SELECT original_id, duplicate_ids FROM duplicates WHERE json_extract(duplicate_ids, '$') LIKE ?", ('%' + str(duplicate_id) + '%',))
+                    cur.execute(
+                        "SELECT original_id, duplicate_ids FROM duplicates WHERE json_extract(duplicate_ids, '$') LIKE ?",
+                        ('%' + str(duplicate_id) + '%',))
                     for original_id, duplicate_ids_json in cur.fetchall():
                         duplicate_ids = json.loads(duplicate_ids_json)
 
@@ -203,7 +206,8 @@ class DatabaseOperations:
                         if duplicate_id in duplicate_ids:
                             duplicate_ids.remove(duplicate_id)
                             if duplicate_ids:  # If there are more duplicates, update the entry
-                                cur.execute("UPDATE duplicates SET duplicate_ids = ? WHERE original_id = ?", (json.dumps(duplicate_ids), original_id))
+                                cur.execute("UPDATE duplicates SET duplicate_ids = ? WHERE original_id = ?",
+                                            (json.dumps(duplicate_ids), original_id))
                             else:  # If no more duplicates, delete the entry
                                 cur.execute("DELETE FROM duplicates WHERE original_id = ?", (original_id,))
                 # Else, do nothing if the file is not marked as deleted
@@ -212,4 +216,3 @@ class DatabaseOperations:
             logging.error("Integrity error occurred: %s", {e})
         except sqlite3.Error as e:
             logging.error("Database error occurred: %s", {e})
-

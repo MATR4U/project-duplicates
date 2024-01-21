@@ -9,5 +9,5 @@ class MyService:
         self.db = db
 
     # Dependency provider function
-    def get_my_service(db: DatabaseBase = Depends(DatabaseBase)):
+    def get_my_service(self, db: DatabaseBase = Depends(DatabaseBase)):
         return MyService(db)

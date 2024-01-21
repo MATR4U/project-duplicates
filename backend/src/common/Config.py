@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class Config:
 
     # TODO refactor into static config
-    OSENV_DBURL= 'MATR_DB_URL'
+    OSENV_DBURL = 'MATR_DB_URL'
     OSENV_SOURCE = 'MATR_SOURCE'
     OSENV_DESTINATION = 'MATR_DESTINATION'
 

@@ -7,13 +7,13 @@
 - **📌 Task**: General tasks or activities that need to be completed.
 
 ## 📝 ToDo
-- 🌟 [ ] Implement Service Class (independence of db instance from the App class and API endpoints)
 - 📌 [ ] Implement Dynamic Handling of DB connections
 - 📌 [ ] Implement Config File Handler
 - 📌 [ ] Implement Thread safety in common classes
 
 ## 🚧 In Progress
 - 🔧 [x] Implement Dynamic Handling of Configuration File changes.
+- 🌟 [x] Implement Service Class (independence of db instance from the App class and API endpoints)
 
 ## ✅ Done
 - 🔧 [x] Configuration validation using pydantic model (100% Complete)

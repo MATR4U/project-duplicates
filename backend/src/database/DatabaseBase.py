@@ -4,7 +4,7 @@ from sqlalchemy import Engine, text
 from sqlalchemy.exc import OperationalError, ProgrammingError, IntegrityError, SQLAlchemyError
 from sqlmodel import SQLModel, create_engine, Session
 from src.common.Config import Config
-
+import src.database.models  # imports all __init__.py defined models, fqn like src.database.models.Item
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -31,22 +31,27 @@ class DatabaseBase:
 
         return cls._instance
 
-    def __init__(self, config):
+    def __init__(self, config: Config):
         if self._initialized:
             return
 
-        if config is None:
-            logging.error("Database initialization failed: No configuration provided.")
-            raise ValueError("Database configuration is required.")
+        # Validate config
+        if not isinstance(config, Config):
+            logging.error("Invalid configuration object provided.")
+            raise TypeError("Expected a Config instance.")
 
+        # Initialize database
         try:
+            # initialization
             self._db_url = config.get_database_url()
             self._engine: Engine = self._create_engine(self._db_url)
-            with self._get_session() as session:
-                self._create_database(session, config.get_config_db()['db_name'])
-                self._create_tables(self._engine)
+
+            # Create database and tables
+            self._initialize_database(config)
+
             self._initialized = True
             logging.info("Database successfully initialized.")
+
         except OperationalError as oe:
             logging.error(f"Operational error during database initialization: {oe}")
             raise  # Consider how to handle this in your application context
@@ -56,6 +61,12 @@ class DatabaseBase:
         except Exception as e:
             logging.error(f"Unexpected error during database initialization: {e}")
             raise
+
+    def _initialize_database(self, config: Config):
+        """Handles the initialization of the database and tables."""
+        with self._get_session() as session:
+            self._create_database(session, config.get_config_db()['db_name'])
+            self._create_tables(self._engine)
 
     def _create_engine(self, db_url) -> Engine:
         """
@@ -105,12 +116,7 @@ class DatabaseBase:
             logging.error(f"An unexpected error occurred while creating the database '{self._db_url}': {e}")
 
     def _create_tables(self, engine):
-        # TODO
-        # Make sure all your SQLModel models are imported before this step
-        # For example:
-        from src.database.models.ecommerce import User, Product, Order, OrderItem
-        from src.database.models.item import Item
-        from src.database.models.health import Health
+        # Create tables for all imported models
         SQLModel.metadata.create_all(engine)
 
     def execute(self, query: str) -> Sequence[Any]:

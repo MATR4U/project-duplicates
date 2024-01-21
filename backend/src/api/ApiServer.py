@@ -7,7 +7,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from typing import Dict
 
 from core.ConfigurationModel import AppConfig
-from src.common.Config import Config
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -53,7 +52,7 @@ class APIServer:
             # Example database operation
             # singleton = DatabaseBase()
             # results = "" # singleton.execute("SELECT * FROM health_check")
-            return {"message": str("")} # results)}
+            return {"message": str("")}  # results)}
 
     def _setup_exception_handlers(self):
         @self.fast_api.exception_handler(RequestValidationError)
