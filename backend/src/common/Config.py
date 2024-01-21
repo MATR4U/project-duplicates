@@ -29,6 +29,7 @@ class Config:
         return cls._instance
 
     def __init__(self, args=None):
+        #TODO Refactor the handling of _initialized
         if not self._initialized:
             self._config_file = ConfigFileHandler(self._args)  # Set the command-line arguments
             self._initialized = True
@@ -38,8 +39,8 @@ class Config:
             return self._args.source
         elif os.environ:
             return os.environ.get(self.OSENV_SOURCE)
-        elif self._args.config:
-            return self._config_file.get_config().get('source')
+        elif self._args.get_json:
+            return self._config_file.get_json().get_json('source')
         else:
             return ""
     
@@ -48,8 +49,8 @@ class Config:
             return self._args.destination
         elif os.environ:
             return os.environ.get(self.OSENV_DESTINATION)
-        elif self._args.config:
-            return self._config_file.get_config().get('destination')
+        elif self._args.get_json:
+            return self._config_file.get_json().get_json('destination')
         else:
             return ""
 
@@ -84,13 +85,13 @@ class Config:
             logging.error(f"Error in getting database URL: {e}")
             raise
 
-    def get_config(self):
+    def get_json(self):
         """
         Retrieve database configuration from the loaded configuration file.
         Returns default values if specific configuration settings are not found.
         """
         try:
-            config = self._config_file.get_config()
+            config = self._config_file.get_json()
             return config
 
         except Exception as e:
@@ -103,7 +104,7 @@ class Config:
         Get the API configuration from command line arguments or configuration file.
         """
         # Retrieve the whole configuration dictionary safely
-        config = self._config_file.get_config() if self._config_file else {}
+        config = self._config_file.get_json() if self._config_file else {}
         api_config = config.get('API', {})
 
         # API Host
@@ -142,16 +143,16 @@ class Config:
         Returns default values if specific configuration settings are not found.
         """
         try:
-            db_config = self._config_file.get_config().get('Database', {})
+            db_config = self._config_file.get_json().get_json('Database', {})
 
             # Dictionary to store the final configuration
             final_config = {
-                'db_type': db_config.get('db_type', 'postgresql'),
-                'db_user': db_config.get('db_user', 'myuser'),
-                'db_password': db_config.get('db_password', 'mypassword'),
-                'db_host': db_config.get('db_host', 'localhost'),
-                'db_port': db_config.get('db_port', '5432'),
-                'db_name': db_config.get('db_name', 'mydb')
+                'db_type': db_config.get_json('db_type', 'postgresql'),
+                'db_user': db_config.get_json('db_user', 'myuser'),
+                'db_password': db_config.get_json('db_password', 'mypassword'),
+                'db_host': db_config.get_json('db_host', 'localhost'),
+                'db_port': db_config.get_json('db_port', '5432'),
+                'db_name': db_config.get_json('db_name', 'mydb')
             }
 
             # Log warnings for any default values used

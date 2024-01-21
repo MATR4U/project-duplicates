@@ -8,9 +8,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 class App:
-    _instance = None  # Private class-level instance attribute
+    """
+    Singleton class that represents the application. It handles the initialization
+    and management of various components like configuration, processor, API server, and database.
+    """
     _initialized = False
-
+    _instance = None  # Singleton instance
     _args = None
     _config = None
     _processor = None
@@ -18,50 +21,34 @@ class App:
     _db = None
 
     def __new__(cls, args=None, **kwargs):
+        """
+        Ensures only one instance of the App class is created. Initializes the instance with arguments.
+        """
         if cls._instance is None:
             cls._instance = super(App, cls).__new__(cls)
             cls._instance._args = args
         return cls._instance
 
     def __init__(self, args=None):
-        # Prevent re-initialization
-        if self._initialized:
+        """
+        Initialize the application. This includes setting up configuration, database, API, and processor.
+        The initialization only occurs once due to the singleton pattern.
+        """
+        if getattr(self, '_initialized', False):
             return
 
-        # Singleton initialization logic here
-        self._args = args
-        self._config = Config(args)
-        self._initialized = True
-
-    def processor(self):
-        if self._processor is None:
+        try:
+            self._args = args
+            self._config = Config(self._args)  #Returns the configuration instance, creating it if it doesn't exist.
             self._processor = Processor()
-        return self._processor
+            self._api = APIServer().run(self._config.get_json())
+            self._db = Postgresql(self._config)
+            self._initialized = True
+            logging.info("Application initialized successfully.")
 
-    def api(self):
-        if self._api is None:
-            self._api = APIServer()
-        return self._api
-
-    def config(self):
-        if self._config is None:
-            self._config = Config(self._args)
-        return self._config
-
-    def db(self):
-        if self._db is None:
-            self._db = Postgresql(self.config())
-        return self._db
-
-    def run_db(self):
-        # Example usage of db
-        # TODO: Refactor health check
-        # result = self.db.execute("SELECT * FROM health_check")
-        pass
+        except Exception as e:
+            logging.error(f"Error during App initialization: {e}")
+            raise
 
     def run_api(self):
-        self.api().run(self._config.get_config())
-
-    def run_cli(self):
-        # TODO: Implement CLI logic
-        pass
+        self._api.run(self._config.get_json())

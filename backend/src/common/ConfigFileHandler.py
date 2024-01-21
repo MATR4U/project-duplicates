@@ -1,10 +1,12 @@
 import os
-from threading import Lock
 import json
 import logging
+import hashlib
+from threading import Lock
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import hashlib
+
+from core.Config.ConfigurationModel import AppConfig
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -15,11 +17,12 @@ class ConfigFileHandler(FileSystemEventHandler):
     Singleton class that handles reading a configuration file and monitoring
     it for changes.
     """
+    _initialized = False
     _args = None
     _lock = Lock()  # Lock for thread-safety
-    _config_file_path = 'config.json'  # Default path to the configuration file
+    _path = 'config.json'  # Default path to the configuration file
     _instance = None  # Singleton instance
-    _config = None    # Class attribute to store config data
+    _config_json = None    # Class attribute to store config data
     _observer = None  # Watchdog observer for file changes
 
     def __new__(cls, args=None):
@@ -36,32 +39,37 @@ class ConfigFileHandler(FileSystemEventHandler):
         Initialize the ConfigFileHandler instance. Load the configuration file
         and start the file observer to monitor for changes.
         """
-        self._config_file_path = args.config or self._config_file_path
-        if self._config is None:  # Initialize only once
-            self._config = self._load_config()
+
+        if getattr(self, '_initialized', False):
+            return
+
+        self._path = args.config or self._path
+        if self._config_json is None:  # Initialize only once
+            self._config_json = self._get_json()
             self._observer = Observer()  # Initialize the observer here
             self._start_watching_config()
         self.config_file_hash = self._calculate_file_hash()
+        self._initialized = True
 
-    def _load_config(self):
+    def _get_json(self):
         """
         Load configuration from the specified file path. Defaults to the class
         CONFIG_FILE_PATH if no path is provided.
         """
         with self._lock:
-            if not os.path.exists(self._config_file_path):
-                logging.error(f"Configuration file not found at {self._config_file_path}")
+            if not os.path.exists(self._path):
+                logging.error(f"Configuration file not found at {self._path}")
                 return {}
 
             try:
-                with open(self._config_file_path, 'r') as file:
+                with open(self._path, 'r') as file:
                     return json.load(file)
             except json.JSONDecodeError as e:
-                logging.error(f"Error decoding JSON from configuration file {self._config_file_path}: {e}")
+                logging.error(f"Error decoding JSON from configuration file {self._path}: {e}")
             except IOError as e:
-                logging.error(f"IOError while loading configuration from {self._config_file_path}: {e}")
+                logging.error(f"IOError while loading configuration from {self._path}: {e}")
             except Exception as e:
-                logging.error(f"Unexpected error loading configuration from {self._config_file_path}: {e}")
+                logging.error(f"Unexpected error loading configuration from {self._path}: {e}")
 
             return {}
 
@@ -71,7 +79,7 @@ class ConfigFileHandler(FileSystemEventHandler):
         """
         hash_md5 = hashlib.md5()
         try:
-            with open(self._config_file_path, "rb") as f:
+            with open(self._path, "rb") as f:
                 for chunk in iter(lambda: f.read(4096), b""):
                     hash_md5.update(chunk)
             return hash_md5.hexdigest()
@@ -84,14 +92,14 @@ class ConfigFileHandler(FileSystemEventHandler):
         Reload the configuration file.
         """
         with self._lock:
-            self._config = self._load_config()
+            self._config_json = self._get_json()
 
     def _start_watching_config(self):
         """
         Start the Watchdog observer to monitor configuration file changes.
         """
         # Convert to absolute path if it's not already
-        dirname = os.path.abspath(self._config_file_path) or '.'
+        dirname = os.path.abspath(self._path) or '.'
         if not os.path.exists(dirname):
             logging.error(f"Directory for config file does not exist: {dirname}")
             return
@@ -116,7 +124,7 @@ class ConfigFileHandler(FileSystemEventHandler):
         Watchdog event handler for file modifications.
         """
         with self._lock:
-            if event.src_path.endswith(self._config_file_path):
+            if event.src_path.endswith(self._path):
                 new_hash = self._calculate_file_hash()
                 if new_hash != self.config_file_hash:
                     logging.info("Configuration file content changed, reloading...")
@@ -125,9 +133,9 @@ class ConfigFileHandler(FileSystemEventHandler):
                 else:
                     logging.info("Configuration file metadata changed, no content change detected.")
 
-    def get_config(self):
+    def get_app_config(self) -> AppConfig:
         """
         Get the current configuration.
         """
         with self._lock:
-            return self._config
+            return AppConfig(**self._config_json)

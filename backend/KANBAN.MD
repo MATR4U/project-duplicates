@@ -10,9 +10,10 @@
 - [ ] 📌 Implement Dynamic Handling of DB connections
 - [ ] 📌 Implement Config File Handler
 - [ ] 📌 Implement Thread safety in common classes
+- [ ] 📌 Refactor the handling of _initialized
 
 ## 🚧 In Progress
-- [ ] 🔧 Implement Dynamic Handling of Configuration File changes.
+- [x] 🔧 Implement Dynamic Handling of Configuration File changes.
 - [x] 🌟 Implement Service Class (independence of db instance from the App class and API endpoints)
 
 ## ✅ Done

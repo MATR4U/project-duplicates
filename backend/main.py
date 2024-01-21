@@ -15,8 +15,6 @@ def main():
 
     args = parser.parse_args()
     app = App(args)
-
-    app.run_db()
     app.run_api()
 
 

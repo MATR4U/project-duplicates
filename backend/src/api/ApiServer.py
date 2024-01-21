@@ -4,9 +4,8 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from typing import Dict
 
-from core.ConfigurationModel import AppConfig
+from core.Config.ConfigurationModel import AppConfig
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -50,8 +49,9 @@ class APIServer:
         @self.fast_api.get("/")
         async def read_root():
             # Example database operation
-            # singleton = DatabaseBase()
-            # results = "" # singleton.execute("SELECT * FROM health_check")
+            from database.DatabaseBase import DatabaseBase
+            singleton = DatabaseBase()
+            results = singleton.execute("SELECT * FROM health_check")
             return {"message": str("")}  # results)}
 
     def _setup_exception_handlers(self):
@@ -69,10 +69,8 @@ class APIServer:
                 content={"error": "HTTP Exception", "detail": exc.detail},
             )
 
-    def run(self, config_json: Dict):
-        config = AppConfig(**config_json)
+    def run(self, config: AppConfig):
         try:
-
             uvicorn.run(self.fast_api,
                         host=config.API.api_host,
                         port=config.API.api_port,

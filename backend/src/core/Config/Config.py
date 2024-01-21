@@ -15,7 +15,6 @@ class Config:
     CONFIG_FILE = 'config.json'
     config = None  # Class attribute to store config data
     args = None
-    
 
     def __new__(cls, *args, **kwargs):
         with cls._lock:
@@ -46,8 +45,8 @@ class Config:
             return self.args.source
         elif os.environ:
             return os.environ.get('SOURCE')
-        elif self.args.config:
-            return self._load_config(self.args.config).get('source')
+        elif self.args.get_json:
+            return self._load_config(self.args.get_json).get('source')
         else:
             return ""
     
@@ -56,8 +55,8 @@ class Config:
             return self.args.destination
         elif os.environ:
             return os.environ.get('DESTINATION')
-        elif self.args.config:
-            return self._load_config(self.args.config).get('destination')
+        elif self.args.get_json:
+            return self._load_config(self.args.get_json).get('destination')
         else:
             return ""
 
@@ -80,17 +79,17 @@ class Config:
         if cls.args and cls.args.api_host:
             api_host = cls.args.api_host
         else:
-            api_host = config.get('API', {}).get('api_host', '0.0.0.0')
+            api_host = config.get_json('API', {}).get_json('api_host', '0.0.0.0')
 
         if cls.args and cls.args.api_port:
             api_port = cls.args.api_port
         else:
-            api_port = config.get('API', {}).get('api_port', '8000')
+            api_port = config.get_json('API', {}).get_json('api_port', '8000')
 
         if cls.args and cls.args.api_log_level:
             api_log_level = cls.args.api_log_level
         else:
-            api_log_level = config.get('API', {}).get('api_log_level', 'info')
+            api_log_level = config.get_json('API', {}).get_json('api_log_level', 'info')
 
         return {
             'api_host': api_host,

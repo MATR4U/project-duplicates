@@ -7,11 +7,10 @@
 - **📌 Task**: General tasks or activities that need to be completed.
 
 ## 📝 ToDo
-🌟 - [ ] Implement Authentication throughout the app architecture (using vault as key store)
-📌 - [ ] Build CI/CD Pipeline
+- [ ] 🌟 Implement Authentication throughout the app architecture (using vault as key store)
 
 ## 🚧 In Progress
-- [ ] ...
+- [ ] 📌 Build CI/CD Pipeline using Codana, Github Actions, Pytest
 
 ## ✅ Done
 - [ ] ...
@@ -30,4 +29,4 @@
 - https://fastapi.tiangolo.com/tutorial/bigger-applications/
 - https://lucene.apache.org/ (https://solr.apache.org/)
 - https://blog.adenin.com/push-vs-pull-api/
-- Codana Project Issues: https://qodana.cloud/projects/
+- Codana Project: https://qodana.cloud/projects/
