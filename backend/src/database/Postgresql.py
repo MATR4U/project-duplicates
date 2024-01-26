@@ -1,5 +1,5 @@
 from database.DatabaseBase import DatabaseBase
-from src.common.Config import Config
+from core.Config.Config import Config
 from typing import Optional
 
 

@@ -3,8 +3,8 @@ import logging
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import OperationalError, ProgrammingError, IntegrityError, SQLAlchemyError
 from sqlmodel import SQLModel, create_engine, Session
-from src.common.Config import Config
-import src.database.models  # imports all __init__.py defined models, fqn like src.database.models.Item
+from core.Config.Config import Config
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
