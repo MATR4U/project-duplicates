@@ -1,6 +1,6 @@
 import logging
 from src.core.processor import Processor
-from core.api.ApiServer import APIServer
+from api.ApiServer import APIServer
 from core.Config.Config import Config
 from src.database.Postgresql import Postgresql
 
