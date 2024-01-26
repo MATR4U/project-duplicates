@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from src.api.v1.endpoints.Base import EndpointsBase
-from src.api.v1.endpoints.EndpointItem import Item
-from src.api.v1.schemas.Item import ItemCreate, ItemRead
-from src.api.v1.dependencies import get_database_session  # Import your database session utility
+from core.api.v1.endpoints.Base import EndpointsBase
+from core.api.v1.endpoints.EndpointItem import Item
+from core.api.v1.schemas.Item import ItemCreate, ItemRead
+from core.api.v1.dependencies import get_database_session  # Import your database session utility
 
 router = APIRouter()
 crud_item = EndpointsBase(Item)
