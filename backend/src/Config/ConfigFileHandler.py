@@ -6,7 +6,7 @@ from threading import Lock
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from core.Config.ConfigurationModel import AppConfig
+from Config.ConfigurationModel import AppConfig
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

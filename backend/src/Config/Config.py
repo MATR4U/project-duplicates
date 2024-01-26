@@ -1,7 +1,7 @@
 import os
 import logging
 import threading
-from core.Config.ConfigFileHandler import ConfigFileHandler
+from Config.ConfigFileHandler import ConfigFileHandler
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 

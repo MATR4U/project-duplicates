@@ -1,7 +1,7 @@
 import logging
 from src.core.processor import Processor
 from api.ApiServer import APIServer
-from core.Config.Config import Config
+from Config.Config import Config
 from src.database.Postgresql import Postgresql
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
