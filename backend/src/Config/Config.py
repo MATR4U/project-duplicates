@@ -1,7 +1,8 @@
 import os
 import logging
 import threading
-from Config.ConfigFileHandler import ConfigFileHandler
+from config.ConfigFileHandler import ConfigFileHandler
+from config.ConfigModel import DatabaseConfig
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
@@ -16,20 +17,20 @@ class Config:
 
     _lock = threading.Lock()
     _instance = None  # Class attribute to store the singleton instance
-    _args = None
     _config_file = None
     _initialized = False
 
-    def __new__(cls, args=None):
+    def __new__(cls, **args):
         with cls._lock:
             if not cls._instance:
                 cls._instance = super().__new__(cls)
                 cls._instance._args = args
         return cls._instance
 
-    def __init__(self, args=None):
+    def __init__(self, **args):
         if not self._initialized:
-            self._config_file = ConfigFileHandler(self._args)  # Set the command-line arguments
+            self._args = args
+            self._config_file = ConfigFileHandler()  # Set the command-line arguments
             self._initialized = True
 
     def get_source(self):
@@ -141,17 +142,11 @@ class Config:
         Returns default values if specific configuration settings are not found.
         """
         try:
-            db_config = self._config_file.get_json().get_json('Database', {})
+            db_config = self._config_file.get_json()('Database', {})
 
             # Dictionary to store the final configuration
-            final_config = {
-                'db_type': db_config.get_json('db_type', 'postgresql'),
-                'db_user': db_config.get_json('db_user', 'myuser'),
-                'db_password': db_config.get_json('db_password', 'mypassword'),
-                'db_host': db_config.get_json('db_host', 'localhost'),
-                'db_port': db_config.get_json('db_port', '5432'),
-                'db_name': db_config.get_json('db_name', 'mydb')
-            }
+            final_config = DatabaseConfig(**db_config)
+            final_config = DatabaseConfig.model_validate_json(db_config)
 
             # Log warnings for any default values used
             for key, value in final_config.items():

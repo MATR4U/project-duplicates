@@ -5,14 +5,15 @@ import hashlib
 from threading import Lock
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-
-from Config.ConfigurationModel import AppConfig
+from config.ConfigModel import AppConfig
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+DEFAULT_CONFIG_PATH = 'config.json'  # Default path to the configuration file
 
-class ConfigFileHandler(FileSystemEventHandler):
+
+class ConfigFileHandler():
     """
     Singleton class that handles reading a configuration file and monitoring
     it for changes.
@@ -20,21 +21,21 @@ class ConfigFileHandler(FileSystemEventHandler):
     _initialized = False
     _args = None
     _lock = Lock()  # Lock for thread-safety
-    _path = 'config.json'  # Default path to the configuration file
     _instance = None  # Singleton instance
     _config_json = None    # Class attribute to store config data
     _observer = None  # Watchdog observer for file changes
+    _app_config = None
 
-    def __new__(cls, args=None):
+    def __new__(cls, **args):
         """
         Ensure only one instance of ConfigFileHandler is created.
         """
         if cls._instance is None:
             cls._instance = super(ConfigFileHandler, cls).__new__(cls)
-            cls._instance._args = args
+            cls._instance._app_config = AppConfig(**args)
         return cls._instance
 
-    def __init__(self, args=None):
+    def __init__(self, **args):
         """
         Initialize the ConfigFileHandler instance. Load the configuration file
         and start the file observer to monitor for changes.
@@ -43,7 +44,7 @@ class ConfigFileHandler(FileSystemEventHandler):
         if getattr(self, '_initialized', False):
             return
 
-        self._path = args.config or self._path
+        self._path = self.args.config or DEFAULT_CONFIG_PATH
         if self._config_json is None:  # Initialize only once
             self._config_json = self._get_json()
             self._observer = Observer()  # Initialize the observer here
