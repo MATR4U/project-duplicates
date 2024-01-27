@@ -1,8 +1,9 @@
 import logging
 from src.core.processor import Processor
 from api.ApiServer import APIServer
-from Config.Config import Config
+from config.Config import Config
 from src.database.Postgresql import Postgresql
+from config.ConfigModel import load_config
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -20,7 +21,7 @@ class App:
     _api = None
     _db = None
 
-    def __new__(cls, args=None, **kwargs):
+    def __new__(cls, args: dict):
         """
         Ensures only one instance of the App class is created. Initializes the instance with arguments.
         """
@@ -29,17 +30,18 @@ class App:
             cls._instance._args = args
         return cls._instance
 
-    def __init__(self, args=None):
+    def __init__(self, args: dict):
         """
         Initialize the application. This includes setting up configuration, database, API, and processor.
         The initialization only occurs once due to the singleton pattern.
         """
+
         if getattr(self, '_initialized', False):
             return
 
         try:
             self._args = args
-            self._config = Config(self._args)  #Returns the configuration instance, creating it if it doesn't exist.
+            self._config = Config()  # Returns the configuration instance, creating it if it doesn't exist.
             self._processor = Processor()
             self._api = APIServer().run(self._config.get_json())
             self._db = Postgresql(self._config)

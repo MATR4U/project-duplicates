@@ -14,7 +14,8 @@ def main():
     parser.add_argument("-c", "--config", type=str, help="Path to the configuration file.", default="config.json")
 
     args = parser.parse_args()
-    app = App(args)
+
+    app = App(vars(args))  # convert args from namespace into dictionary
     app.run_api()
 
 

@@ -3,7 +3,7 @@ import logging
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import OperationalError, ProgrammingError, IntegrityError, SQLAlchemyError
 from sqlmodel import SQLModel, create_engine, Session
-from Config.Config import Config
+from config.Config import Config
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

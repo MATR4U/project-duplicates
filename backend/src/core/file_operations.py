@@ -11,6 +11,7 @@ from tqdm import tqdm
 # Setting up logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class FileOperations:
     """Class provides all filesystem operations"""
 
