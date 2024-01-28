@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from config.Config import Config
 from config.ConfigModel import AppConfig
 
 # Set up logging
@@ -50,7 +51,7 @@ class APIServer:
         async def read_root():
             # Example database operation
             from database.DatabaseBase import DatabaseBase
-            singleton = DatabaseBase()
+            singleton = DatabaseBase()  # implemented None to remove warning accessing Singleton
             results = singleton.execute("SELECT * FROM health_check")
             return {"message": str("")}  # results)}
 
@@ -69,11 +70,12 @@ class APIServer:
                 content={"error": "HTTP Exception", "detail": exc.detail},
             )
 
-    def run(self, config: AppConfig):
+    def run(self, config: Config):
         try:
             uvicorn.run(self.fast_api,
-                        host=config.API.api_host,
-                        port=config.API.api_port,
-                        log_level=config.API.api_log_level)
+                        host=config.get_config_api()['api_host'],
+                        port=config.get_config_api()['api_port'],
+                        log_level=config.get_config_api()['api_log_level']
+                        )
         except Exception as e:
             logging.error(f"An error occurred while running the fastapi server: {e}")

@@ -31,7 +31,7 @@ class DatabaseBase:
 
         return cls._instance
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config = None):
         if self._initialized:
             return
 
@@ -65,10 +65,11 @@ class DatabaseBase:
     def _initialize_database(self, config: Config):
         """Handles the initialization of the database and tables."""
         with self._get_session() as session:
-            self._create_database(session, config.get_config_db()['db_name'])
+            self._create_database(session, config.get_config_app().Database.db_name)
             self._create_tables(self._engine)
 
-    def _create_engine(self, db_url) -> Engine:
+    @staticmethod
+    def _create_engine(db_url) -> Engine:
         """
         Creates a new SQLAlchemy engine with enhanced error handling
         and optional configuration settings.
@@ -115,7 +116,8 @@ class DatabaseBase:
         except Exception as e:
             logging.error(f"An unexpected error occurred while creating the database '{self._db_url}': {e}")
 
-    def _create_tables(self, engine):
+    @staticmethod
+    def _create_tables(engine):
         # Create tables for all imported models
         SQLModel.metadata.create_all(engine)
 

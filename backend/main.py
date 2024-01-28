@@ -15,7 +15,7 @@ def main():
 
     args = parser.parse_args()
 
-    app = App(vars(args))  # convert args from namespace into dictionary
+    app = App(args)  # convert args from namespace into dictionary
     app.run_api()
 
 

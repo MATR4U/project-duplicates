@@ -1,9 +1,11 @@
 import logging
 from src.core.processor import Processor
+from argparse import Namespace
+from src.database.Postgresql import Postgresql
 from api.ApiServer import APIServer
 from config.Config import Config
-from src.database.Postgresql import Postgresql
-from config.ConfigModel import load_config
+from config.ConfigModel import ArgsConfig, AppConfig
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -15,8 +17,8 @@ class App:
     """
     _initialized = False
     _instance = None  # Singleton instance
-    _args = None
-    _config = None
+    _args_config: ArgsConfig = None
+    _config: Config = None
     _processor = None
     _api = None
     _db = None
@@ -27,10 +29,9 @@ class App:
         """
         if cls._instance is None:
             cls._instance = super(App, cls).__new__(cls)
-            cls._instance._args = args
         return cls._instance
 
-    def __init__(self, args: dict):
+    def __init__(self, args: Namespace):
         """
         Initialize the application. This includes setting up configuration, database, API, and processor.
         The initialization only occurs once due to the singleton pattern.
@@ -40,10 +41,10 @@ class App:
             return
 
         try:
-            self._args = args
-            self._config = Config()  # Returns the configuration instance, creating it if it doesn't exist.
+            self._args_config = ArgsConfig(**vars(args))
+            self._config = Config(self._args_config)  # Returns the configuration instance.
             self._processor = Processor()
-            self._api = APIServer().run(self._config.get_json())
+            self._api = APIServer()
             self._db = Postgresql(self._config)
             self._initialized = True
             logging.info("Application initialized successfully.")
@@ -53,4 +54,4 @@ class App:
             raise
 
     def run_api(self):
-        self._api.run(self._config.get_json())
+        self._api.run(self._config)
