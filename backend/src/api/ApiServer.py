@@ -75,7 +75,8 @@ class APIServer:
             uvicorn.run(self.fast_api,
                         host=config.get_config_api()['api_host'],
                         port=config.get_config_api()['api_port'],
-                        log_level=config.get_config_api()['api_log_level']
+                        log_level=config.get_config_api()['api_log_level'],
+                        reload=True  # TODO add into config
                         )
         except Exception as e:
             logging.error(f"An error occurred while running the fastapi server: {e}")

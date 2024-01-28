@@ -1,14 +1,15 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 import json
+from typing import Optional
 
 
 class DatabaseConfig(BaseModel):
-    db_type: str
-    db_user: str
-    db_password: str
-    db_host: str
-    db_port: str
-    db_name: str
+    db_type: Optional[str]
+    db_user: Optional[str]
+    db_password: Optional[str]
+    db_host: Optional[str]
+    db_port: Optional[str]
+    db_name: Optional[str]
 
 
 class APIConfig(BaseModel):
@@ -18,13 +19,22 @@ class APIConfig(BaseModel):
 
 
 class AppConfig(BaseModel):
-    source: str
-    destination: str
-    batch_size: int
-    api_endpoint: str
-    api_token: str
-    Database: DatabaseConfig
-    API: APIConfig
+    source: Optional[str]
+    destination: Optional[str]
+    batch_size: Optional[int]
+    api_endpoint: Optional[str]
+    api_token: Optional[str]
+    Database: Optional[DatabaseConfig]
+    API: Optional[APIConfig]
+
+
+class ArgsConfig(BaseModel):
+    source: Optional[str] = None
+    destination: Optional[str] = None
+    batch_size: Optional[int] = None
+    api_endpoint: Optional[HttpUrl] = None
+    api_token: Optional[str] = None
+    db_url: Optional[str] = None
 
 
 def load_config(file_path: str) -> AppConfig:
@@ -36,6 +46,4 @@ def load_config(file_path: str) -> AppConfig:
     # AppConfig.model_validate_json(**config_data)
     app_config = AppConfig(**config_data)
 
-
-    # Return a single object holding all validated configurations
     return AppConfig(app=app_config)

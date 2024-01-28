@@ -1,8 +1,6 @@
-import os
-import logging
-import threading
+import os, logging, threading
 from config.ConfigFileHandler import ConfigFileHandler
-from config.ConfigModel import DatabaseConfig
+from config.ConfigModel import DatabaseConfig, ArgsConfig, APIConfig, AppConfig
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
@@ -14,44 +12,48 @@ class Config:
     OSENV_DBURL = 'MATR_DB_URL'
     OSENV_SOURCE = 'MATR_SOURCE'
     OSENV_DESTINATION = 'MATR_DESTINATION'
+    CONFIG_FILE_PATH = 'config.json'
 
     _lock = threading.Lock()
     _instance = None  # Class attribute to store the singleton instance
+    _config_file_handler: ConfigFileHandler = None
     _config_file = None
+    _args_config: ArgsConfig = None
+    _config_file_path = CONFIG_FILE_PATH
     _initialized = False
 
-    def __new__(cls, **args):
+    def __new__(cls, *args_config: ArgsConfig):
         with cls._lock:
             if not cls._instance:
                 cls._instance = super().__new__(cls)
-                cls._instance._args = args
+                cls._instance._args_config = args_config
         return cls._instance
 
-    def __init__(self, **args):
+    def __init__(self, args_config: ArgsConfig):
         if not self._initialized:
-            self._args = args
-            self._config_file = ConfigFileHandler()  # Set the command-line arguments
+            self._args_config = args_config
+            self._config_file_handler = ConfigFileHandler()  # Set the command-line arguments
             self._initialized = True
 
     def get_source(self):
-        if self._args:
-            return self._args.source
+        if self._args_config:
+            return self._args_config.source
         elif os.environ:
             return os.environ.get(self.OSENV_SOURCE)
-        elif self._args.get_json:
-            return self._config_file.get_json().get_json('source')
+        elif self.get_config_app():
+            return self.get_config_app().source
         else:
-            return ""
+            raise
     
     def get_destination(self):
-        if self._args:
-            return self._args.destination
+        if self._args_config:
+            return self._args_config.destination
         elif os.environ:
             return os.environ.get(self.OSENV_DESTINATION)
-        elif self._args.get_json:
-            return self._config_file.get_json().get_json('destination')
+        elif self.get_config_app():
+            return self.get_config_app().destination
         else:
-            return ""
+            raise
 
     def get_database_url(self):
         """
@@ -60,9 +62,9 @@ class Config:
         """
         try:
             # Check command line arguments
-            if self._args and self._args.db_url:
+            if self._args_config and self._args_config.db_url:
                 logging.info("Getting database URL from command line arguments.")
-                return self._args.db_url
+                return self._args_config.db_url
 
             # Check environment variable
             db_url_env = os.environ.get(self.OSENV_DBURL)
@@ -71,93 +73,43 @@ class Config:
                 return db_url_env
 
             # Fallback to configuration file
-            cfg = self.get_config_db()
-            if cfg and all(key in cfg for key in ['db_type', 'db_user', 'db_password', 'db_host', 'db_port', 'db_name']):
-                logging.info("Getting database URL from configuration file.")
-                db_url = f"{cfg['db_type']}://{cfg['db_user']}:{cfg['db_password']}@{cfg['db_host']}:{cfg['db_port']}/{cfg['db_name']}"
-                return db_url
-            else:
-                raise ValueError("Database configuration is incomplete or missing.")
+            logging.info("Getting database URL from configuration file.")
+            cfg: DatabaseConfig = self.get_config_app().Database
+            db_url = f"{cfg.db_type}://{cfg.db_user}:{cfg.db_password}@{cfg.db_host}:{cfg.db_port}/{cfg.db_name}"
+            return db_url
 
         except Exception as e:
             # Log and re-raise the exception for higher-level handling
             logging.error(f"Error in getting database URL: {e}")
             raise
 
-    def get_json(self):
-        """
-        Retrieve database configuration from the loaded configuration file.
-        Returns default values if specific configuration settings are not found.
-        """
-        try:
-            config = self._config_file.get_json()
-            return config
-
-        except Exception as e:
-            logging.error(f"Error retrieving configuration: {e}")
-            # Optionally, re-raise the exception or return a default configuration
-            raise  # or return {}
-
     def get_config_api(self):
         """
         Get the API configuration from command line arguments or configuration file.
         """
         # Retrieve the whole configuration dictionary safely
-        config = self._config_file.get_json() if self._config_file else {}
-        api_config = config.get('API', {})
-
-        # API Host
-        api_host = getattr(self._args, 'api_host', None)
-        if api_host:
-            logging.info("API host set from command line arguments.")
-        else:
-            api_host = api_config.get('api_host', '0.0.0.0')
-            logging.info("API host set from configuration file.")
-
-        # API Port
-        api_port = getattr(self._args, 'api_port', None)
-        if api_port:
-            logging.info("API port set from command line arguments.")
-        else:
-            api_port = api_config.get('api_port', '8000')
-            logging.info("API port set from configuration file.")
-
-        # API Log Level
-        api_log_level = getattr(self._args, 'api_log_level', None)
-        if api_log_level:
-            logging.info("API log level set from command line arguments.")
-        else:
-            api_log_level = api_config.get('api_log_level', 'info')
-            logging.info("API log level set from configuration file.")
-
-        return {
-            'api_host': api_host,
-            'api_port': int(api_port),
-            'api_log_level': api_log_level
-        }
-
-    def get_config_db(self):
-        """
-        Retrieve database configuration from the loaded configuration file.
-        Returns default values if specific configuration settings are not found.
-        """
         try:
-            db_config = self._config_file.get_json()('Database', {})
+            app_config = self.get_config_app()
 
-            # Dictionary to store the final configuration
-            final_config = DatabaseConfig(**db_config)
-            final_config = DatabaseConfig.model_validate_json(db_config)
-
-            # Log warnings for any default values used
-            for key, value in final_config.items():
-                if key in db_config and db_config[key] is None:
-                    logging.warning(f"Database configuration for '{key}' is missing; using default: '{value}'")
-                elif key not in db_config:
-                    logging.warning(f"Database configuration for '{key}' not found; using default: '{value}'")
-
-            return final_config
+            if app_config and hasattr(app_config, 'API') and isinstance(app_config.API, APIConfig):
+                api_config = app_config.API
+            else:
+                raise Exception("Error retrieving API configuration from AppConfig")
 
         except Exception as e:
-            logging.error(f"Error retrieving database configuration: {e}")
-            # Optionally, re-raise the exception or return a default configuration
-            raise  # or return {}
+            # Handle the specific error
+            print(f"AppConfigError: {e}")
+            raise
+
+        return {
+            'api_host': api_config.api_host,
+            'api_port': int(api_config.api_port),
+            'api_log_level': api_config.api_log_level
+        }
+
+    def get_config_app(self) -> AppConfig:
+        """
+        Get the current configuration.
+        """
+        with self._lock:
+            return AppConfig(**self._config_file_handler.get_json())

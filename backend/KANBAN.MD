@@ -8,15 +8,17 @@
 
 ## 📝 ToDo
 - [ ] 📌 Implement Dynamic Handling of DB connections
-- [ ] 📌 Implement Config File Handler
-- [ ] 📌 Implement Thread safety in common classes
+- [ ] 📌 Implement Thread safety
 - [ ] 📌 Refactor the handling of _initialized
+- [x] 🌟 Implement Service Class (independence of db instance from the App class and API endpoints)
+- [x] 🐞 DB health check at startup
 
 ## 🚧 In Progress
 - [x] 🔧 Implement Dynamic Handling of Configuration File changes.
-- [x] 🌟 Implement Service Class (independence of db instance from the App class and API endpoints)
+  - [x] 🌟Implement Traefik using as loadbalancer
 
 ## ✅ Done
+- [x] 📌 Implement Config File Handler
 - [x] 🐞 DB health check at startup
 - [x] 🔧 Configuration validation using pydantic model (100% Complete)
 - [x] 📌 Implement Singletons for App and DB (100% Complete)
