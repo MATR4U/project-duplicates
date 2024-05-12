@@ -1,6 +1,9 @@
-import os, logging, threading
-from config.ConfigFileHandler import ConfigFileHandler
-from config.ConfigModel import DatabaseConfig, ArgsConfig, APIConfig, AppConfig
+import logging
+import os
+import threading
+
+from src.config.ConfigFileHandler import ConfigFileHandler
+from src.config.ConfigModel import DatabaseConfig, ArgsConfig, APIConfig, AppConfig
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 

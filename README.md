@@ -12,5 +12,11 @@ deactivate
 ```
 
 - Windows
-pip install virtualenv
-.\venv\Scripts\activate
+
+```
+cd "path"
+python -m venv .venv
+cd .\venv\Scripts\
+activate.bat
+deactivate.bat
+```

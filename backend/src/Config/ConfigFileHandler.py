@@ -1,7 +1,11 @@
-import os, json, logging, hashlib
-from watchdog.observers import Observer
+import hashlib
+import json
+import logging
+import os
 from threading import Lock
-from config.ConfigModel import AppConfig
+
+from src.config.ConfigModel import AppConfig
+from watchdog.observers import Observer
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -43,7 +47,7 @@ class ConfigFileHandler:
         if self._config_json is None:  # Initialize only once
             self._config_json = self.get_json()
             self._observer = Observer()  # Initialize the observer here
-            self._start_watching_config()
+            # TODO no need to start 2 times: self._start_watching_config()
         self.config_file_hash = self._calculate_file_hash()
         self._initialized = True
 
@@ -102,7 +106,10 @@ class ConfigFileHandler:
 
         self._observer.schedule(self, path=dirname, recursive=False)
         try:
-            self._observer.start()
+            return
+            # TODO AttributeError: 'ConfigFileHandler' object has no attribute 'dispatch'
+            # self._observer.start()
+
         except FileNotFoundError as e:
             logging.error(f"Failed to start observer: {e}")
 
