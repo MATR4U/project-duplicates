@@ -4,6 +4,7 @@ import logging
 
 logging.basicConfig(level=logging.WARN, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class DatabaseOperationsFiles:
     """Class provides all database operations for the schema files"""
 
@@ -32,7 +33,7 @@ class DatabaseOperationsFiles:
 
         cursor.execute("""
                 CREATE TABLE IF NOT EXISTS files (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id BIGSERIAL PRIMARY KEY,
                     hash TEXT,
                     path TEXT,
                     size INTEGER,
@@ -56,8 +57,8 @@ class DatabaseOperationsFiles:
         """
 
         try:
-                cursor.execute("SELECT id, hash, creation_time FROM files")
-                return cursor.fetchall()
+            cursor.execute("SELECT id, hash, creation_time FROM files")
+            return cursor.fetchall()
         except sqlite3.Error as e:
             logging.error("Error fetching all files: %s", e)
             raise
@@ -76,8 +77,8 @@ class DatabaseOperationsFiles:
             VALUES (:hash, :path, :size, :modification_time, :access_time, :creation_time)
         """
         try:
-                cursor.executemany(query, file_data_list)
-                logging.info("Batch of %s files inserted into the database.", len(file_data_list))
+            cursor.executemany(query, file_data_list)
+            logging.info("Batch of %s files inserted into the database.", len(file_data_list))
         except sqlite3.Error as e:
             logging.error("Error inserting batch into database: %s", e)
             raise
@@ -91,16 +92,16 @@ class DatabaseOperationsFiles:
             cursor (Cursor): A SQLite cursor object to execute database operations.
             file_data_list (list): A list of file data tuples to be added to the database.
         """
-                
+
         try:
-                cursor.execute("SELECT path FROM files")
-                paths = cursor.fetchall()  # This will get all paths as a list of tuples
-                return set(path[0] for path in paths)  # Convert to a set of strings
+            cursor.execute("SELECT path FROM files")
+            paths = cursor.fetchall()  # This will get all paths as a list of tuples
+            return set(path[0] for path in paths)  # Convert to a set of strings
         except Exception as e:
             logging.error("Error retrieving existing paths from the database: %s", e)
             # Handle the exception as needed, possibly re-raise or return an empty set
             return set()
-        
+
     def mark_as_deleted(self, cursor: Cursor, file_id):
         """
         Marks a file entry as deleted in the 'files' table in the database.
@@ -110,8 +111,8 @@ class DatabaseOperationsFiles:
             file_id (int): The ID of the file to be marked as deleted.
         """
         try:
-                cursor.execute("UPDATE files SET is_deleted = 1 WHERE id = ?", (file_id,))
-                logging.info("File with ID %s marked as deleted.", file_id)
+            cursor.execute("UPDATE files SET is_deleted = 1 WHERE id = ?", (file_id,))
+            logging.info("File with ID %s marked as deleted.", file_id)
         except sqlite3.Error as e:
             logging.error("Error marking file as deleted: %s", e)
             raise

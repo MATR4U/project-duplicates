@@ -3,7 +3,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import shutil
 from tqdm import tqdm
-from database.operations.db_operations import DatabaseOperations
+from src.database.operations.db_operations import DatabaseOperations
 from src.core.file_operations import FileOperations
 from src.common.Utilities import Utilities
 

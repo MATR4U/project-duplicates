@@ -2,10 +2,9 @@ import logging
 from src.core.processor import Processor
 from argparse import Namespace
 from src.database.Postgresql import Postgresql
-from api.ApiServer import APIServer
-from config.Config import Config
-from config.ConfigModel import ArgsConfig, AppConfig
-
+from src.api.ApiServer import APIServer
+from src.config.Config import Config
+from src.config.ConfigModel import ArgsConfig, AppConfig
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -20,7 +19,7 @@ class App:
     _args_config: ArgsConfig = None
     _config: Config = None
     _processor = None
-    _api = None
+    _api_server = None
     _db = None
 
     def __new__(cls, args: dict):
@@ -44,7 +43,7 @@ class App:
             self._args_config = ArgsConfig(**vars(args))
             self._config = Config(self._args_config)  # Returns the configuration instance.
             self._processor = Processor()
-            self._api = APIServer()
+            self._api_server = APIServer()
             #self._db = Postgresql(self._config) #ToDo
             self._initialized = True
             logging.info("Application initialized successfully.")
@@ -53,5 +52,7 @@ class App:
             logging.error(f"Error during App initialization: {e}")
             raise
 
-    def run_api(self):
-        self._api.run(self._config)
+    def run_api_server(self):
+        self._api_server.run(self._config.get_config_api()['api_host'],
+                            self._config.get_config_api()['api_port'],
+                            self._config.get_config_api()['api_log_level'])

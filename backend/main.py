@@ -16,7 +16,7 @@ def main():
     args = parser.parse_args()
 
     app = App(args)  # convert args from namespace into dictionary
-    app.run_api()
+    app.run_api_server()
 
 
 if __name__ == "__main__":
