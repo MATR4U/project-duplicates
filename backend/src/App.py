@@ -45,7 +45,7 @@ class App:
             self._config = Config(self._args_config)  # Returns the configuration instance.
             self._processor = Processor()
             self._api = APIServer()
-            self._db = Postgresql(self._config)
+            #self._db = Postgresql(self._config) #ToDo
             self._initialized = True
             logging.info("Application initialized successfully.")
 
