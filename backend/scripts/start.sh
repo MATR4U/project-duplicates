@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #LOGIN DOCKER
-docker login
+docker login -u "doc1024" docker.io
 
 #DOCKER CREATE NETWORK
 docker network create my_network
@@ -16,10 +16,13 @@ docker remove -f matr-backend
 
 #CONTAINER RUN
 #docker pull "doc1024/matr:backend-latest"
-docker run --network my_network --publish 8000:8000 --publish 80:80 --name matr-backend -d "doc1024/matr:backend-latest"
+#detached
+# docker run --network my_network --publish 8000:8000 --publish 80:80 --name matr-backend -d "doc1024/matr:backend-latest"
+# docker run -it --network my_network --publish 8000:8000 --publish 80:80 --name matr-backend "doc1024/matr:backend-latest"
 
 #CONTAINER CONNECT
-#docker ps -all docker exec -it matr-backend /bin/bash
+#docker ps -all
+#docker exec -it matr-backend /bin/bash
 
 #APP INSTALL
 #pip install -r requirements.txt

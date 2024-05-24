@@ -1,12 +1,16 @@
 ### MATR BACKEND
-
 SQLModel SAFRS: https://github.com/thomaxxl/safrs?tab=readme-ov-file
 Full Stack: https://github.com/tiangolo/full-stack-fastapi-postgresql
 
-# PYTHON INSTALL
-python -m venv .venv
-(mac: source) .\.venv\Scripts\activate 
+# pip installation
+python -m ensurepip --upgrade
 python -m pip install --upgrade pip
+
+# PYTHON INSTALL VENV
+python pip install virtualenv
+python -m venv .venv
+mac: source .venv/bin/activate
+win: .\.venv\bin\activate
 
 # APP DEPENDENCIES INSTALL
 pip install -r requirements.txt
