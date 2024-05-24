@@ -1,7 +1,6 @@
 import logging
 from src.core.processor import Processor
 from argparse import Namespace
-from src.database.Postgresql import Postgresql
 from src.api.ApiServer import APIServer
 from src.config.Config import Config
 from src.config.ConfigModel import ArgsConfig, AppConfig
@@ -53,6 +52,8 @@ class App:
             raise
 
     def run_api_server(self):
-        self._api_server.run(self._config.get_config_api()['api_host'],
-                            self._config.get_config_api()['api_port'],
-                            self._config.get_config_api()['api_log_level'])
+        api_host = self._config.get_config_api()['api_host']
+        api_port = self._config.get_config_api()['api_port']
+        api_log_level = self._config.get_config_api()['api_log_level']
+
+        self._api_server.run(api_host, api_port, api_log_level)

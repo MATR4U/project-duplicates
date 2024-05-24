@@ -2,6 +2,6 @@
 .venv
 .vscode
 .data
-.env
+.env_tmp
 *db
 out
