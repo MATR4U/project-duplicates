@@ -4,9 +4,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
-from database.DatabaseBase import DatabaseBase
-from database.Postgresql import Postgresql
+from src.database.Postgresql import Postgresql
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

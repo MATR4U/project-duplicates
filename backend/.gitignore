@@ -1,7 +1,9 @@
-.scripts
-.venv
+.idea
 .vscode
+.venv
+out
+.scripts
 .data
 .env_tmp
-*db
-out
+*.db
+

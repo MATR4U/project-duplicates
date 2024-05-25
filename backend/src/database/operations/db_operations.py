@@ -1,8 +1,8 @@
 import sqlite3
 import logging
 import json
-from database.operations.db_operations_files import DatabaseOperationsFiles
-from database.operations.db_operations_duplicates import DatabaseOperationsDuplicates
+from src.database.operations.db_operations_files import DatabaseOperationsFiles
+from src.database.operations.db_operations_duplicates import DatabaseOperationsDuplicates
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

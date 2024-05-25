@@ -1,7 +1,7 @@
 import logging
 from src.core.processor import Processor
 from argparse import Namespace
-from database.Postgresql import Postgresql
+from src.database.Postgresql import Postgresql
 from src.api.ApiServerUvicorn import APIServerUvicorn
 from src.config.Config import Config
 from src.config.ConfigModel import ArgsConfig, AppConfig
@@ -41,8 +41,8 @@ class App:
 
         try:
             self._args_config = ArgsConfig(**vars(args))
+            # self._processor = Processor()
             self._config = Config(self._args_config)  # Returns the configuration instance.
-            self._processor = Processor()
             self._db = Postgresql(self._config) #ToDo
             self._api_server = APIServerUvicorn(self._db)
             self._initialized = True

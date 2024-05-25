@@ -19,7 +19,7 @@ pip install -r requirements.txt
 python main.py -b "postgresql://myuser:mypassword@0.0.0.0/mydb"
 
 # RUN BACKEND-API
-python -m uvicorn app_api:app --reload
+# python -m uvicorn app_api:app --reload
 
 ecommerce-backend/
 │
