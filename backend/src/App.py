@@ -1,7 +1,8 @@
 import logging
 from src.core.processor import Processor
 from argparse import Namespace
-from src.api.ApiServer import APIServer
+from database.Postgresql import Postgresql
+from src.api.ApiServerUvicorn import APIServerUvicorn
 from src.config.Config import Config
 from src.config.ConfigModel import ArgsConfig, AppConfig
 
@@ -42,8 +43,8 @@ class App:
             self._args_config = ArgsConfig(**vars(args))
             self._config = Config(self._args_config)  # Returns the configuration instance.
             self._processor = Processor()
-            self._api_server = APIServer()
-            #self._db = Postgresql(self._config) #ToDo
+            self._db = Postgresql(self._config) #ToDo
+            self._api_server = APIServerUvicorn(self._db)
             self._initialized = True
             logging.info("Application initialized successfully.")
 
@@ -57,3 +58,7 @@ class App:
         api_log_level = self._config.get_config_api()['api_log_level']
 
         self._api_server.run(api_host, api_port, api_log_level)
+
+    # TODO Implement stop and clean up
+    def stop_api_server(self):
+        pass
