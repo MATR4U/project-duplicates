@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 fast_api = FastAPI()
 
+
 class APIServerUvicorn:
     _instance = None
     _initialized = False
